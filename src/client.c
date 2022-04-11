@@ -26,25 +26,40 @@ int main(int argc, char *argv[]) {
   int nbOctet = 0;
   int maxSize = 128;
   char *fin = "fin";
-  char *m = malloc(sizeof(char)*maxSize);
   size_t size;
   do
   {
+    char *msg = malloc(sizeof(char)*maxSize);
     printf("Message -> ");
-    fgets(m, maxSize, stdin);
-    size = strlen(m);
+    fgets(msg, maxSize, stdin);
+    size = strlen(msg)+1;
 
-    if(sendto(dS, &size, sizeof(int), 0, (struct sockaddr *)&aS, lgA) == -1) {
+    if (strcmp(msg, fin) == 0)
+    {
+      // break;
+    }
+
+    if(sendto(dS, &size, sizeof(size_t), 0, (struct sockaddr *)&aS, lgA) == -1) {
       perror("error sendto");
       exit(1);
     }
-    
-    if(sendto(dS, m, size, 0, (struct sockaddr *)&aS, lgA) == -1) {
+
+    if(sendto(dS, msg, size, 0, (struct sockaddr *)&aS, lgA) == -1) {
       perror("error sendto");
       exit(1);
     }
 
-    printf("Envoi confirmé\n\n");
+    if (recv(dS, &size, sizeof(size_t), 0) == -1){
+      perror("error recv server");
+      exit(1);
+    }
+
+    if (recv(dS, msg, sizeof(char)*size, 0) == -1){
+      perror("error recv");
+      exit(1);
+    }
+    printf("Client 2 -> %s", msg);
+    free(msg);
   } while (1);
 
   if (close(dS) == -1)
