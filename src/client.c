@@ -21,8 +21,7 @@ void* sendMsg(void* val){
   do
   {
     
-    int maxSize = 128;
-    printf("pouet\n");
+    int maxSize = 1024;
     char *fin = "fin";
     size_t size;
 
@@ -52,21 +51,21 @@ void* sendMsg(void* val){
 }
 
 
-void* receiveMsg(void* socket){
-  int dS = (long)socket;
+void* receiveMsg(void* params){
+  struct values *parameters = (struct values*) params;
   do
   {
     char *fin = "fin";
     size_t size;
 
-    if (recv(dS, &size, sizeof(size_t), 0) == -1){
+    if (recv(parameters->socket, &size, sizeof(size_t), 0) == -1){
       perror("error recv server");
       exit(1);
     }
 
     char *msg = malloc(sizeof(char)*size);
 
-    if (recv(dS, msg, sizeof(char)*size, 0) == -1){
+    if (recv(parameters->socket, msg, sizeof(char)*size, 0) == -1){
       perror("error recv");
       exit(1);
     }
@@ -98,20 +97,22 @@ int main(int argc, char *argv[]) {
   inet_pton(AF_INET, argv[1], &(aS.sin_addr));
   aS.sin_port = htons(atoi(argv[2]));
   socklen_t lgA = sizeof(struct sockaddr_in);
-  connect(dS, (struct sockaddr *) &aS, lgA) ;
+  connect(dS, (struct sockaddr *) &aS, lgA);
   printf("Socket Connecté\n");
 
-  pthread_t thread[NB_THREADS];
+  pthread_t sendThread ;
+  pthread_t recvThread;
 
   struct values val;
   val.socket = dS;
   val.sockaddr = aS;
   val.socklen = lgA;
 
-  pthread_create(thread[0], NULL, sendMsg, (void*)&val);
+  pthread_create(&sendThread, NULL, sendMsg, (void*)&val);
+  pthread_create(&recvThread, NULL, receiveMsg, (void*)&val);
 
-
-  pthread_create(thread[1], NULL, receiveMsg, &dS);
+  pthread_join(sendThread, NULL);
+  pthread_join(recvThread, NULL);
 
   if (close(dS) == -1)
   {
