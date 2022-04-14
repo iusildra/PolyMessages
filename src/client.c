@@ -6,13 +6,23 @@
 #include <unistd.h>
 #include <pthread.h>
 
+int NB_THREADS = 2;
+
+struct values {
+  int socket;
+  struct sockaddr_in sockaddr;
+  socklen_t socklen;
+}values;
 int i = 2;
 
 //0 : int dS, 1 : struct sockaddr_in aS, 2 : socklen_t lgA
-void* sendMsg(void* values){
+void* sendMsg(void* val){
+  struct values *param = (struct values*)val;
   do
   {
+    
     int maxSize = 128;
+    printf("pouet\n");
     char *fin = "fin";
     size_t size;
 
@@ -27,12 +37,12 @@ void* sendMsg(void* values){
       // break;
     }
 
-    if(sendto((int)values[0], &size, sizeof(size_t), 0, (struct sockaddr *)&values[1], (socklen_t)values[2]) == -1) {
+    if(sendto(param->socket, &size, sizeof(size_t), 0, (struct sockaddr *)&(param->sockaddr), param->socklen) == -1){
       perror("error sendto");
       exit(1);
     }
 
-    if(sendto((int)values[0], msg, size, 0, (struct sockaddr *)&values[1],(socklen_t)values[2]) == -1) {
+    if(sendto(param->socket, msg, size, 0, (struct sockaddr *)&param->sockaddr,param->socklen) == -1) {
       perror("error sendto");
       exit(1);
     }
@@ -42,7 +52,8 @@ void* sendMsg(void* values){
 }
 
 
-void* receiveMsg(void* dS){
+void* receiveMsg(void* socket){
+  int dS = (long)socket;
   do
   {
     char *fin = "fin";
@@ -90,12 +101,17 @@ int main(int argc, char *argv[]) {
   connect(dS, (struct sockaddr *) &aS, lgA) ;
   printf("Socket Connecté\n");
 
-  pthread_t idSend;
-  void* values = [dS, aS, lgA] ;
-  pthread_create(&idSend, NULL, sendMsg, values);
+  pthread_t thread[NB_THREADS];
 
-  pthread_t idRcv;
-  pthread_create(&idRcv, NULL, receiveMsg, &dS);
+  struct values val;
+  val.socket = dS;
+  val.sockaddr = aS;
+  val.socklen = lgA;
+
+  pthread_create(thread[0], NULL, sendMsg, (void*)&val);
+
+
+  pthread_create(thread[1], NULL, receiveMsg, &dS);
 
   if (close(dS) == -1)
   {
@@ -103,5 +119,5 @@ int main(int argc, char *argv[]) {
     exit(1);
   };
 
-  printf("\nFin du programme");
+  printf("\nFin du programme\n");
 }
