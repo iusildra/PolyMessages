@@ -45,13 +45,12 @@ int main(int argc, char *argv[])
 		printf("Message -> ");
 		fgets(msg, maxSize, stdin);
 		size = strlen(msg) + 1;
-
 		if (strcmp(msg, fin) == 0)
 		{
 			// break;
 		}
 
-		if (sendto(dS, &size, sizeof(int), 0, (struct sockaddr *)&aS, lgA) == -1)
+		if (sendto(dS, &size, sizeof(size_t), 0, (struct sockaddr *)&aS, lgA) == -1)
 		{
 			perror("error sendto");
 			exit(1);
