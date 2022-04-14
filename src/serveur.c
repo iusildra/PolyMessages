@@ -7,18 +7,25 @@
 #include <unistd.h>
 #define NB_THREADS 2
 
+struct parametres_struct {
+  int socks [50];
+  size_t size;
+  socklen_t lg;
+  struct sockaddr_in aC;
+};
 
+void * C1versC2(void * params){
 
-void * C1versC2(void *, int dSC){
+  struct parametres_struct *param =(struct parametres_struct *)params;
 
   while (1){
 
-    if (recv(dSC, &size, sizeof(size_t), 0) == -1)
+    if (recv(param -> socks[0], &(param -> size), sizeof(size_t), 0) == -1)
     {
       perror("error recv server");
       exit(1);
     }
-    char *msg = malloc(sizeof(char)*size);
+    char *msg = malloc(sizeof(char)*(param -> size));
 
     // if (strcmp(msg, "fin") == 0){
     //   shutdown(dS, 2);
@@ -27,19 +34,19 @@ void * C1versC2(void *, int dSC){
     //   listen(dS2, 7);
     // }
 
-    if (recv(dSC, msg, sizeof(char)*size, 0) == -1){
+    if (recv(param -> socks[0], msg, sizeof(char)*(param -> size), 0) == -1){
       perror("error recv server");
       exit(1);
     }
 
-    printf("Taille = %ld & Message = %s", size, msg);
-    if (sendto(dS2C, &size, sizeof(size_t), 0, (struct sockaddr *)&aC, lg) == -1)
+    printf("Taille = %ld & Message = %s", param -> size, msg);
+    if (sendto(param -> socks[1], &(param -> size), sizeof(size_t), 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
     }
 
-    if (sendto(dS2C, msg, size, 0, (struct sockaddr *)&aC, lg) == -1)
+    if (sendto(param -> socks[1], msg, param -> size, 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
@@ -51,26 +58,28 @@ void * C1versC2(void *, int dSC){
 
 
 
-void * C2versC1(void *, int dS2C){
+void * C2versC1(void * params){
+
+  struct parametres_struct *param =(struct parametres_struct *)params;
 
   while (1){
-    if (recv(dS2C, &size, sizeof(size_t), 0) == -1) {
+    if (recv(param -> socks[1], &(param -> size), sizeof(size_t), 0) == -1) {
       perror("error recv");
       exit(1);
     }
     
-    char *msg = malloc(sizeof(char)*size);
+    char *msg = malloc(sizeof(char)*(param -> size));
 
-    if (recv(dS2C, msg, sizeof(char)*size, 0) == -1){
+    if (recv(param -> socks[1], msg, sizeof(char)*(param -> size), 0) == -1){
       perror("error recv server");
       exit(1);
     }
-    if (sendto(dSC, &size, sizeof(size_t), 0, (struct sockaddr *)&aC, lg) == -1)
+    if (sendto(param -> socks[0], &(param -> size), sizeof(size_t), 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
     }
-    if (sendto(dSC, msg, size, 0, (struct sockaddr *)&aC, lg) == -1)
+    if (sendto(param -> socks[0], msg, param -> size, 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
@@ -83,6 +92,10 @@ void * C2versC1(void *, int dS2C){
 int main(int argc, char *argv[]){
 
   printf("Début programme\n");
+
+  pthread_t thread[NB_THREADS];
+
+  struct parametres_struct param;
 
   int dS = socket(PF_INET, SOCK_STREAM, 0);
   printf("Socket Créé\n");
@@ -98,8 +111,9 @@ int main(int argc, char *argv[]){
   printf("Mode écoute client 1\n");
 
   struct sockaddr_in aC;
-  socklen_t lg = sizeof(struct sockaddr_in);
-  int dSC = accept(dS, (struct sockaddr *)&aC, &lg);
+  param.aC = aC;
+  param.lg = sizeof(struct sockaddr_in);
+  param.socks[0] = accept(dS, (struct sockaddr *)&aC, &param.lg);
   printf("Client 1 Connecté\n");
 
   int dS2 = socket(PF_INET, SOCK_STREAM, 0);
@@ -115,14 +129,11 @@ int main(int argc, char *argv[]){
 
   struct sockaddr_in aC2;
   socklen_t lg2 = sizeof(struct sockaddr_in);
-  int dS2C = accept(dS, (struct sockaddr *)&aC2, &lg2);
+  param.socks[1] = accept(dS, (struct sockaddr *)&aC2, &lg2);
   printf("Client 2 Connecté\n");
 
-  pthread_t thread[NB_THREADS];
-
-  size_t size;
-  pthread_create(&thread[1], NULL, C1versC2, (void *));
-  pthread_create(&thread[2], NULL, C2versC1, (void *));
+  pthread_create(&thread[1], NULL, C1versC2, (void *)&param);
+  pthread_create(&thread[2], NULL, C2versC1, (void *)&param);
 
   // shutdown(dS2C, 2);
   //shutdown(dSC, 2);
