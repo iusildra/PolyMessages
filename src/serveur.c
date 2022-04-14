@@ -132,8 +132,11 @@ int main(int argc, char *argv[]){
   param.socks[1] = accept(dS, (struct sockaddr *)&aC2, &lg2);
   printf("Client 2 Connecté\n");
 
-  pthread_create(&thread[1], NULL, C1versC2, (void *)&param);
-  pthread_create(&thread[2], NULL, C2versC1, (void *)&param);
+  pthread_create(&thread[0], NULL, C1versC2, (void *)&param);
+  pthread_create(&thread[1], NULL, C2versC1, (void *)&param);
+
+  pthread_join(thread[0], NULL);
+  pthread_join(thread[1], NULL);
 
   // shutdown(dS2C, 2);
   //shutdown(dSC, 2);
