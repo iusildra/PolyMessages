@@ -1,0 +1,21 @@
+@startuml protocole
+
+skinparam responseMessageBelowArrow true
+
+actor Bob 
+participant "Bob's client" as Client1
+participant Server 
+participant "Alice's client" as Client2
+actor Alice
+
+autonumber "<b>[00]"
+Bob -> Client1++ : write
+Client1 -> Server++: transmit
+Server -> Client2++: send
+Client2 -> Alice++: receive
+return: answer
+return: transmit
+return: send
+return: receive
+
+@enduml

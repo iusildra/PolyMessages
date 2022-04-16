@@ -1,0 +1,20 @@
+@startuml grantt
+language fr
+printscale daily zoom 8
+hide footbox
+Project starts 2022-04-11
+[Init] as [I] starts 2022-04-11
+[Parallelisation client] as [PC] lasts 3 days
+[Parallelisation serveur] as [PS] lasts 3 days
+[Fusion] as [F] lasts 1 day
+
+[I] -> [PC]
+[I] -> [PS]
+[PC] -> [F]
+[PS] -> [F]
+
+[I] on {Lucas} lasts 1 day
+[F] on {Lucas} lasts 1 day
+[PS] on {Marvin} lasts 3 days
+[PC] on {Éri} lasts 3 days
+@enduml

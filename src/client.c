@@ -16,6 +16,7 @@ struct values {
 int i = 2;
 
 //0 : int dS, 1 : struct sockaddr_in aS, 2 : socklen_t lgA
+//sendThread : allows a client to send a message to the server
 void* sendMsg(void* val){
   struct values *param = (struct values*)val;
   do
@@ -24,7 +25,6 @@ void* sendMsg(void* val){
     int maxSize = 1024;
     char *fin = "fin";
     size_t size;
-
     char *msg = malloc(sizeof(char)*maxSize);
     printf("Message -> ");
     fgets(msg, maxSize, stdin);
@@ -36,11 +36,13 @@ void* sendMsg(void* val){
       // break;
     }
 
+    //Send the size of the message
     if(sendto(param->socket, &size, sizeof(size_t), 0, (struct sockaddr *)&(param->sockaddr), param->socklen) == -1){
       perror("error sendto");
       exit(1);
     }
 
+    //Send the message itself
     if(sendto(param->socket, msg, size, 0, (struct sockaddr *)&param->sockaddr,param->socklen) == -1) {
       perror("error sendto");
       exit(1);
@@ -50,7 +52,7 @@ void* sendMsg(void* val){
   } while (1);
 }
 
-
+//recvThread : allows a client to receive a message
 void* receiveMsg(void* params){
   struct values *parameters = (struct values*) params;
   do
@@ -58,6 +60,7 @@ void* receiveMsg(void* params){
     char *fin = "fin";
     size_t size;
 
+    //Receive the size of the message
     if (recv(parameters->socket, &size, sizeof(size_t), 0) == -1){
       perror("error recv server");
       exit(1);
@@ -65,6 +68,7 @@ void* receiveMsg(void* params){
 
     char *msg = malloc(sizeof(char)*size);
 
+    //Receive the message itself
     if (recv(parameters->socket, msg, sizeof(char)*size, 0) == -1){
       perror("error recv");
       exit(1);
@@ -85,6 +89,7 @@ void* receiveMsg(void* params){
 int main(int argc, char *argv[])
 {
 	printf("Début programme\n");
+  //Socket initialization
 	int dS = socket(PF_INET, SOCK_STREAM, 0);
 	if (dS == -1)
 	{
@@ -104,14 +109,17 @@ int main(int argc, char *argv[])
   pthread_t sendThread ;
   pthread_t recvThread;
 
+  //Values to pass to the sendThread
   struct values val;
   val.socket = dS;
   val.sockaddr = aS;
   val.socklen = lgA;
 
+  //Create thread
   pthread_create(&sendThread, NULL, sendMsg, (void*)&val);
   pthread_create(&recvThread, NULL, receiveMsg, (void*)&val);
 
+  //Wait for threads to finish
   pthread_join(sendThread, NULL);
   pthread_join(recvThread, NULL);
 

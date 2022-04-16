@@ -6,7 +6,9 @@
 #include <pthread.h>
 #include <unistd.h>
 #define NB_THREADS 2
+#define MAX_CONNECTIONON 10
 
+//Parameters needed to send/receive a message
 struct parametres_struct {
   int socks [50];
   size_t size;
@@ -14,12 +16,14 @@ struct parametres_struct {
   struct sockaddr_in aC;
 };
 
+
+//Transfer Client 1's message to Client 2
 void * C1versC2(void * params){
 
   struct parametres_struct *param =(struct parametres_struct *)params;
 
   while (1){
-
+    //Receive the message's size
     if (recv(param -> socks[0], &(param -> size), sizeof(size_t), 0) == -1)
     {
       perror("error recv server");
@@ -33,19 +37,21 @@ void * C1versC2(void * params){
     //   listen(dS, 7);
     //   listen(dS2, 7);
     // }
-
-    if (recv(param -> socks[0], msg, sizeof(char)*(param -> size), 0) == -1){
+    //Receive the message itself
+    if (recv(param -> socks[0], msg, sizeof(char)*(param -> size), 0) == -1)
+    {
       perror("error recv server");
       exit(1);
     }
 
     printf("Taille = %ld & Message = %s", param -> size, msg);
+    //Send the message's size
     if (sendto(param -> socks[1], &(param -> size), sizeof(size_t), 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
     }
-
+    //Send the message itself
     if (sendto(param -> socks[1], msg, param -> size, 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
@@ -57,28 +63,35 @@ void * C1versC2(void * params){
 }
 
 
-
+//Transfer Client 2's message to Client 1
 void * C2versC1(void * params){
 
   struct parametres_struct *param =(struct parametres_struct *)params;
 
   while (1){
-    if (recv(param -> socks[1], &(param -> size), sizeof(size_t), 0) == -1) {
+    //Receive the message's size
+    if (recv(param -> socks[1], &(param -> size), sizeof(size_t), 0) == -1)
+    {
       perror("error recv");
       exit(1);
     }
     
     char *msg = malloc(sizeof(char)*(param -> size));
-
-    if (recv(param -> socks[1], msg, sizeof(char)*(param -> size), 0) == -1){
+    //Receive the message itself
+    if (recv(param -> socks[1], msg, sizeof(char)*(param -> size), 0) == -1)
+    {
       perror("error recv server");
       exit(1);
     }
+
+	  printf("Taille = %ld & Message = %s", param -> size, msg);
+    //Send the message's size
     if (sendto(param -> socks[0], &(param -> size), sizeof(size_t), 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
       exit(1);
     }
+    //Send the message itself
     if (sendto(param -> socks[0], msg, param -> size, 0, (struct sockaddr *)&(param -> aC), param -> lg) == -1)
     {
       perror("error sendto server");
@@ -92,7 +105,6 @@ void * C2versC1(void * params){
 int main(int argc, char *argv[]){
 
 	printf("Début programme\n");
-
   pthread_t thread[NB_THREADS];
 
   struct parametres_struct param;
@@ -143,3 +155,5 @@ int main(int argc, char *argv[]){
   //shutdown(dS, 2);
   printf("Fin du programme");
 }
+
+//TODO : parametrize C1versC2 to make it more flexible and use 1 function for every client
