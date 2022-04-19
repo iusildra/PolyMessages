@@ -5,12 +5,12 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
-#define NB_THREADS 2
-#define MAX_CONNECTIONON 10
+#define MAX_NB_CLIENTS 2
 
 //Parameters needed to send/receive a message
 struct parametres_struct {
-  int socks [50];
+  int socks [MAX_NB_CLIENTS];
+  int nbClients;
   size_t size;
   socklen_t lg;
   struct sockaddr_in aC;
@@ -105,7 +105,7 @@ void * C2versC1(void * params){
 int main(int argc, char *argv[]){
 
 	printf("Début programme\n");
-  pthread_t thread[NB_THREADS];
+  pthread_t thread[MAX_NB_CLIENTS];
 
   struct parametres_struct param;
 
@@ -125,23 +125,10 @@ int main(int argc, char *argv[]){
   struct sockaddr_in aC;
   param.aC = aC;
   param.lg = sizeof(struct sockaddr_in);
-  param.socks[0] = accept(dS, (struct sockaddr *)&aC, &param.lg);
+  param.socks[0] = accept(dS, (struct sockaddr *)&param.aC, &param.lg);
   printf("Client 1 Connecté\n");
 
-  int dS2 = socket(PF_INET, SOCK_STREAM, 0);
-
-  struct sockaddr_in ad2;
-  ad.sin_family = AF_INET;
-  ad.sin_addr.s_addr = INADDR_ANY;
-  ad.sin_port = htons(atoi(argv[1]));
-  bind(dS2, (struct sockaddr *)&ad2, sizeof(ad2));
-
-	listen(dS2, 7);
-	printf("Mode écoute client 2\n");
-
-  struct sockaddr_in aC2;
-  socklen_t lg2 = sizeof(struct sockaddr_in);
-  param.socks[1] = accept(dS, (struct sockaddr *)&aC2, &lg2);
+  param.socks[1] = accept(dS, (struct sockaddr *)&param.aC, &param.lg);
   printf("Client 2 Connecté\n");
 
   pthread_create(&thread[0], NULL, C1versC2, (void *)&param);
@@ -150,7 +137,7 @@ int main(int argc, char *argv[]){
   pthread_join(thread[0], NULL);
   pthread_join(thread[1], NULL);
 
-  // shutdown(dS2C, 2);
+  //shutdown(dS2C, 2);
   //shutdown(dSC, 2);
   //shutdown(dS, 2);
   printf("Fin du programme");
