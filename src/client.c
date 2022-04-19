@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "client.h"
 
 int NB_THREADS = 2;
 

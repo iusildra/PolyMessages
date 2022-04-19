@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include "serveur.h"
 #define MAX_NB_CLIENTS 2
 
 // Parameters needed to send/receive a message
