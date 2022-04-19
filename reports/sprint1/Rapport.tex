@@ -73,24 +73,20 @@
 \begin{figure}[h]
 	\centering
 	\hrulefill\\
-	\includegraphics[width=0.75\linewidth]{seq_sprint1.png}
+	\includegraphics[width=0.925\linewidth]{sequence.png}
 	\caption{Protocole de communication clients/serveur}
 	\hrulefill
 \end{figure}
 
+\pagebreak
 \section{Architecture}
 \begin{figure}[h]
 	\centering
 	\hrulefill\\
-	\includegraphics[width=0.75\linewidth]{architecture.png}
+	\includegraphics[width=\linewidth]{architecture.png}
 	\caption{Architecture de la messagerie}
 	\hrulefill
 \end{figure}
-
-
-\pagebreak
-\section{Difficultés}
-Les difficultés rencontrées ont principalement été d'ordre technique. En parler entre nous ou avec les autres nous a permis de résoudre les problèmes.
 \section{Répartition du travail}
 \begin{wraptable}{r}{0.5\linewidth}
 	\vspace{-0.5cm}
@@ -112,16 +108,16 @@ Les difficultés rencontrées ont principalement été d'ordre technique. En par
 	\label{table:repartition}
 	\vspace{-1.5cm}
 \end{wraptable}
-Au lancement du projet, une messagerie basique au tour par tour a été montée par Lucas car il était impossible de travailler de manière efficiente à plusieurs sur une seule fonctionnalité. Une fois cette base complète, il était possible de travailler en parallèle donc le threading du serveur et des clients ont respectivement été fait par Marvin et Éri (voir \ul{Table.~\ref{table:repartition}} \& \ul{Fig.~\ref{fig:grantt}}). La fusion de ces 2 travaux asynchrones a été effectuée par Lucas.
+Au lancement du projet, une messagerie basique au tour par tour a été montée par Lucas car il était impossible de travailler de manière efficiente à plusieurs sur une seule fonctionnalité. Une fois cette base complète, il était possible de travailler en parallèle donc le threading du serveur et des clients ont respectivement été fait par Marvin et Éri (voir \ul{Table.~\ref{table:repartition}} \& \ul{Fig.~\ref{fig:gantt}}). La fusion de ces 2 travaux asynchrones a été effectuée par Lucas.
 \begin{figure}[h]
-	\vspace{0.5cm}
 	\centering
 	\hrulefill\\
-	\includegraphics[width=0.9\linewidth]{grantt.png}\\
-	\caption{Diagramme de Grantt sur la réalisation du projet}
-	\label{fig:grantt}
+	\includegraphics[width=\linewidth]{gantt.png}\\
+	\caption{Diagramme de Gantt sur la réalisation du projet}
+	\label{fig:gantt}
 	\hrulefill
 \end{figure}
+\pagebreak
 \section{Exécution du code}
 Pour lancer la messagerie, il faut commencer par compiler et lancer le serveur
 \begin{figure}[h]
@@ -142,5 +138,6 @@ Pour lancer la messagerie, il faut commencer par compiler et lancer le serveur
 		[lucas@xps-lucas ~]$ ./client <IP> <PORT>
 	\end{lstlisting}
 \end{figure}
-
+\section{Difficultés}
+Les difficultés rencontrées ont principalement été d'ordre technique. En parler entre nous ou avec les autres nous a permis de résoudre les problèmes.
 \end{document}
