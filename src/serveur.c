@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "serveur.h"
 #define MAX_NB_CLIENTS 10
+#define DEFAULT_SOCKET -1
 
 // Parameters needed to send/receive a message
 struct parametres_struct
@@ -30,6 +31,7 @@ void *clientManagement(void *params)
 {
 
   struct clientParams *param = (struct clientParams *)params;
+  char *end = "Marvin -> /DC\n"; //Used for testing. The user must be named Marvin (case sensitive :D) 
 
   while (1)
   {
@@ -48,10 +50,20 @@ void *clientManagement(void *params)
       perror("error recv server");
       exit(1);
     }
+    printf("Msg -> %s", msg);
+    if (strcmp(msg, end) == 0)
+    {
+      printf("Client %d disconnect\n", connection.socks[param->position]);
+      break;
+    }
 
     // Send the message's size
     for (int i = 0; i < connection.nbClients; i++)
     {
+      if (connection.socks[i] == DEFAULT_SOCKET)
+      {
+        continue;
+      }
       if (send(connection.socks[i], &(param->size), sizeof(size_t), 0) == -1)
       {
         perror("error sendto server");
@@ -66,20 +78,35 @@ void *clientManagement(void *params)
     }
     free(msg);
   }
+  shutdown(connection.socks[param->position], 2);
+  connection.socks[param->position] = DEFAULT_SOCKET;
   free(params);
   pthread_exit(0);
 }
 
+int getIndex()
+{
+  int i = 0;
+  while (i < connection.nbClients && connection.socks[i] != DEFAULT_SOCKET)
+  {
+    i++;
+  }
+  return i;
+}
 void *userLogin()
 {
   pthread_t thread[MAX_NB_CLIENTS];
   do
   {
-    struct clientParams* clientParams = malloc(sizeof(struct clientParams));
-    connection.socks[connection.nbClients] = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
-    clientParams->position = connection.nbClients;
-    printf("Client added ? %d\n", pthread_create(&thread[clientParams->position], NULL, clientManagement, (void *)clientParams));
-    connection.nbClients++;
+    struct clientParams *clientParams = malloc(sizeof(struct clientParams));
+    int i = getIndex();
+    connection.socks[i] = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
+    clientParams->position = i;
+    pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams);
+    if (i == connection.nbClients)
+    { // Used to make sure the received message is transmitted to every client. If nbClient was decreased when a client deconnect, the last clients wouldn't receive the message.
+      connection.nbClients++;
+    }
   } while (connection.nbClients < MAX_NB_CLIENTS);
 
   for (int i = 0; i < MAX_NB_CLIENTS; i++)

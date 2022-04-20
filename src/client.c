@@ -28,14 +28,15 @@ void *sendMsg(void *val)
   do
   {
     size_t size;
-    char *fin = "fin";
+    char *fin = "/DC\n";
     int maxSize = 1024;
     char msg[maxSize];
     char *fullMsg = malloc(sizeof(char) * (maxSize + strlen(param->username)));
 
     fgets(msg, maxSize, stdin);
-    if (msg[0]=='/'){
-      executer(msg,param->username);
+    if (msg[0]=='/' && strcmp(msg, fin)!=0) {
+        executer(msg,param->username);
+        continue;
     }
     strcpy(fullMsg, param->username);
     strcat(fullMsg, " -> ");
