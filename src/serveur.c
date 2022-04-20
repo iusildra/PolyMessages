@@ -33,7 +33,6 @@ void *clientManagement(void *params)
 
   while (1)
   {
-    printf("Client : %d\n", connection.socks[param->position]);
     // Receive the message's size
     if (recv(connection.socks[param->position], &(param->size), sizeof(size_t), 0) == -1)
     {
@@ -53,14 +52,13 @@ void *clientManagement(void *params)
     // Send the message's size
     for (int i = 0; i < connection.nbClients; i++)
     {
-      printf("Send to %d\n", connection.socks[i]);
-      if (sendto(connection.socks[i], &(param->size), sizeof(size_t), 0, (struct sockaddr *)&(connection.aC), connection.lg) == -1)
+      if (send(connection.socks[i], &(param->size), sizeof(size_t), 0) == -1)
       {
         perror("error sendto server");
         exit(1);
       }
       // Send the message itself
-      if (sendto(connection.socks[i], msg, param->size, 0, (struct sockaddr *)&(connection.aC), connection.lg) == -1)
+      if (send(connection.socks[i], msg, param->size, 0) == -1)
       {
         perror("error sendto server");
         exit(1);
