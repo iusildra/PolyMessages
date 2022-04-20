@@ -22,6 +22,27 @@ struct params
   size_t size;
 };
 
+/*
+Fonction d'éxécution qui lance l'éxécution de la bonne fonctionnalité
+*/
+void* executer(char* msg, String user){
+  char* motMsg = strtok(msg, " ");
+  char listeMot[4][1024] = {""}
+  strcpy(listeMot[0], motMsg)
+  int i = 1;
+  while (motMsg != NULL){
+    motMsg = strtok(NULL, " ");
+    strcpy(listeMot[i], motMsg);
+    i = i + 1;
+  }
+  if (listeMot[0]=="/mp"){
+
+    //faire la recherche de l'identifiant de l'utilisateur dans la future collection
+
+    messagePrive(/*identifiant*/,atoi(listeMot[1]),listeMot[2])
+  }
+}
+
 /* 
 Fonctionnalité de message privé
 Prends en paramètre l'utilisateur à qui envoyer le mp ainsi que le message à envoyer

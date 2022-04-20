@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "client.h"
+#include "commandes.h"
 #define usernameMaxLength 20
 
 int NB_THREADS = 2;
@@ -33,6 +34,9 @@ void *sendMsg(void *val)
     char *fullMsg = malloc(sizeof(char) * (maxSize + strlen(param->username)));
 
     fgets(msg, maxSize, stdin);
+    if (msg[0]=='/'){
+      executer(msg,param->username);
+    }
     strcpy(fullMsg, param->username);
     strcat(fullMsg, " -> ");
     strcat(fullMsg, msg);
