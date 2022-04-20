@@ -1,8 +1,12 @@
 @startuml grantt
 language fr
-printscale daily zoom 8
+saturday are closed
+sunday are closed
 hide footbox
+hide ressources footbox
 Project starts 2022-04-11
+' SPRINT I
+-- SPRINT I --
 [Init] as [I] starts 2022-04-11
 [Parallelisation client] as [PC] lasts 3 days
 [Parallelisation serveur] as [PS] lasts 3 days
@@ -13,8 +17,15 @@ Project starts 2022-04-11
 [PC] -> [F]
 [PS] -> [F]
 
-[I] on {Lucas} lasts 1 day
-[F] on {Lucas} lasts 1 day
-[PS] on {Marvin} lasts 3 days
-[PC] on {Éri} lasts 3 days
+[I] on {Lucas:100%} lasts 1 day
+[F] on {Lucas:100%} lasts 1 day
+[PS] on {Marvin:100%} lasts 3 days
+[PC] on {Éri:100%} lasts 3 days
+
+' SPRINT II
+-- Sprint II --
+[Gestion multi-client] as [MCH] starts 2022-04-19 and lasts 2 days
+[F] -> [MCH]
+
+[MCH] on {Lucas:100%} lasts 2 days
 @enduml
