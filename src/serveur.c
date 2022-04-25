@@ -33,6 +33,23 @@ void *clientManagement(void *params)
   struct clientParams *param = (struct clientParams *)params;
   char *end = "Marvin -> /DC\n"; //Used for testing. The user must be named Marvin (case sensitive :D) 
 
+
+  //Send to say to the client he is connected
+  char* co;
+  sprintf(co, "Bonjour %d", param->position);
+  printf("%s",co);
+  size_t first_size = sizeof(co);
+  if (send(connection.socks[param->position], &first_size, sizeof(size_t), 0) == -1){
+    perror("error first sendto size server");
+    exit(1);
+  }
+
+  if (send(connection.socks[param->position], co, first_size, 0) == -1){
+    perror("error first sendto server");
+    exit(1);
+  }
+  printf("%s",co);
+
   while (1)
   {
     // Receive the message's size
@@ -93,6 +110,7 @@ int getIndex()
   }
   return i;
 }
+
 void *userLogin()
 {
   pthread_t thread[MAX_NB_CLIENTS];
@@ -102,7 +120,11 @@ void *userLogin()
     int i = getIndex();
     connection.socks[i] = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
     clientParams->position = i;
-    pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams);
+    printf("Client logs in\n");
+    if (pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams)==-1){
+      perror("error clientManagement server");
+      exit(1);
+    }
     if (i == connection.nbClients)
     { // Used to make sure the received message is transmitted to every client. If nbClient was decreased when a client deconnect, the last clients wouldn't receive the message.
       connection.nbClients++;
@@ -126,10 +148,16 @@ int main(int argc, char *argv[])
   ad.sin_family = AF_INET;
   ad.sin_addr.s_addr = INADDR_ANY;
   ad.sin_port = htons(atoi(argv[1]));
-  bind(connection.dS, (struct sockaddr *)&ad, sizeof(ad));
+  if (bind(connection.dS, (struct sockaddr *)&ad, sizeof(ad))==-1) {
+    perror("error bind server");
+    exit(1);
+  };
   printf("Socket Nommé\n");
 
-  listen(connection.dS, 7);
+  if (listen(connection.dS, 7)==-1){
+    perror("error listen server");
+    exit(1);  
+  }
   printf("Mode écoute client\n");
   struct sockaddr_in aC;
   connection.aC = aC;

@@ -127,7 +127,27 @@ int main(int argc, char *argv[])
   inet_pton(AF_INET, argv[1], &(aS.sin_addr));
   aS.sin_port = htons(atoi(argv[2]));
   socklen_t lgA = sizeof(struct sockaddr_in);
-  connect(dS, (struct sockaddr *)&aS, lgA);
+  if (connect(dS, (struct sockaddr *)&aS, lgA)==-1){
+    perror("error connect server");
+    exit(1);
+  }
+
+  //Receive to check if the client is connected
+  size_t first_size;
+
+  if (recv(dS, &first_size, sizeof(size_t), 0) == -1){
+    perror("error first recv size server");
+    exit(1);
+  }
+
+  char *first_msg = malloc(first_size);
+  if (recv(dS, &first_msg, first_size, 0) == -1){
+    perror("error first recv server");
+    exit(1);
+  }
+  printf("%s", first_msg);
+
+  //Connected
   printf("Socket Connecté\n");
 
   pthread_t sendThread;
