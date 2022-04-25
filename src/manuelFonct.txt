@@ -1,0 +1,14 @@
+Fonctionnalité de message privé :
+Prends en paramètre l'utilisateur à qui envoyer le mp ainsi que le message à envoyer
+Envoie un message que seule la personne en paramètre et la personne qui a envoyé le message peut voir
+Utilisation de la commande : /mp <nom du destinataire> <message>
+
+Fonctionnalité de manuel :
+Ne prends pas de paramètres
+Lorsqu'un utilisateur se sert de cette fonction, liste les fonctionnalités disponibles, stockées dans un fichier texte
+Utilisation de la commande : /manuel
+
+Fonctionnalité de déconnexion :
+Ne prends pas de paramètre
+Lorsqu'un utilisateur utilise cette fonction, le serveur enlève le client de la liste, ferme la connexion et met fin au thread de cet utilisateur
+Utilisation de la commande : /DC
