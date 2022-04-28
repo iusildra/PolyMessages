@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "serveur.h"
-#include "commandes.c"
+// #include "commandes.c"
 #define MAX_NB_CLIENTS 3
 
 struct userTuple
@@ -32,10 +32,7 @@ struct clientParams
   unsigned short position;
 };
 
-sem_t* nbPlaces;
-
-
-
+sem_t nbPlaces;
 
 /**
  * @brief Get the client's username
@@ -105,6 +102,25 @@ void sendMsg(struct clientParams *param, char *msg)
   }
 }
 
+void sendDisconnection(struct userTuple* user)
+{
+  char *end = "/DC";
+  size_t size = sizeof(char) * (strlen(end) + 1);
+  if (send(user->socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error sendto server");
+    exit(1);
+  }
+
+  // Send the message itself
+  if (send(user->socket, end, size, 0) == -1)
+  {
+    perror("error sendto server");
+    exit(1);
+  }
+  printf("%s disconnect\n", user->username);
+}
+
 /**
  * @brief Receive a message and broadcast it to everyone
  *
@@ -131,16 +147,17 @@ int recvSend(struct clientParams *param)
   }
   if (strcmp(msg, end) == 0)
   {
-    printf("%s disconnect\n", connection.socks[param->position]->username);
+    sendDisconnection(connection.socks[param->position]);
     return 0;
   }
-  if (msg[0] == '/' && strcmp(msg, fin) != 0)
-    {
-      // executer(msg, *(param), connection);
-    }
-  else{
+  if (msg[0] == '/' && strcmp(msg, end) != 0)
+  {
+    // executer(msg, *(param), connection);
+  }
+  else
+  {
     sendMsg(param, msg);
-    }
+  }
   free(msg);
   return 1;
 }
@@ -167,10 +184,10 @@ void *clientManagement(void *params)
   // Close the socket and free the
   shutdown(connection.socks[param->position]->socket, 2);
   connection.socks[param->position] = NULL;
-  if (sem_post(nbPlaces))
+  if (sem_post(&nbPlaces))
   {
     perror("sem post");
-      exit(1);
+    exit(1);
   }
   free(params);
   pthread_exit(0);
@@ -201,7 +218,7 @@ void *userLogin()
   pthread_t thread[MAX_NB_CLIENTS];
   do
   {
-    if (sem_wait(nbPlaces))
+    if (sem_wait(&nbPlaces))
     {
       perror("sem wait");
       exit(1);
@@ -235,13 +252,14 @@ void *userLogin()
  */
 int main(int argc, char *argv[])
 {
-  printf("Début programme\n");
 
-  if (sem_init(nbPlaces, 0, MAX_NB_CLIENTS))
+  printf("Début programme\n");
+  if (sem_init(&nbPlaces, 0, MAX_NB_CLIENTS))
   {
     perror("Innit Semaphore");
     exit(1);
   }
+  printf("Sémaphore crée\n");
 
   connection.dS = socket(PF_INET, SOCK_STREAM, 0);
   if (connection.dS < 0)
@@ -277,7 +295,7 @@ int main(int argc, char *argv[])
 
   userLogin(&nbPlaces);
 
-  if (sem_destroy(nbPlaces))
+  if (sem_destroy(&nbPlaces))
   {
     perror("sem destroy");
     exit(1);

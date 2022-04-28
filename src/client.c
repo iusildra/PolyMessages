@@ -1,12 +1,13 @@
 #include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <pthread.h>
-#include "client.h"
+#include <arpa/inet.h>
+#include <sys/socket.h>
 // #include "commandes.c"
+#include "client.h"
 
 int NB_THREADS = 2;
 
@@ -70,6 +71,7 @@ void *sendMsg(void *val)
  */
 void *receiveMsg(void *params)
 {
+  char *end = "/DC";
   struct values *parameters = (struct values *)params;
   do
   {
@@ -87,6 +89,11 @@ void *receiveMsg(void *params)
       perror("error recv");
       exit(1);
     }
+    if (strcmp(end, msg) == 0)
+    {
+      printf("Disconnection complete");
+      exit(0);
+    }
 
     printf("%s", msg);
     free(msg);
@@ -96,11 +103,11 @@ void *receiveMsg(void *params)
 
 /**
  * @brief Allows a client to send it's username on login
- * 
- * @param params 
- * @return void* 
+ *
+ * @param params
+ * @return void*
  */
-void *sendUsername(struct values *params)
+void sendUsername(struct values *params)
 {
   int usernameMaxSize = 12;
 
@@ -137,12 +144,32 @@ void *sendUsername(struct values *params)
   free(msg);
 }
 
+void terminateClient(int sig)
+{
+  // Send the size of the message
+  char *end = "/DC\n";
+  size_t size = sizeof(char) * (strlen(end) + 1);
+  if (send(values.socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send username");
+    exit(1);
+  }
+
+  // Send the message itself
+  if (send(values.socket, end, size, 0) == -1)
+  {
+    perror("error send username");
+    exit(1);
+  }
+  exit(0);
+}
+
 /**
  * @brief Main function of the client
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char *argv[])
 {
@@ -171,20 +198,21 @@ int main(int argc, char *argv[])
   pthread_t recvThread;
 
   // Values to pass to the sendThread
-  struct values val;
-  val.socket = dS;
-  val.sockaddr = aS;
-  val.socklen = lgA;
+  values.socket = dS;
+  values.sockaddr = aS;
+  values.socklen = lgA;
 
-  sendUsername(&val);
+  sendUsername(&values);
+
+  signal(SIGINT, terminateClient);
 
   // Create thread
-  pthread_create(&sendThread, NULL, sendMsg, (void *)&val);
-  pthread_create(&recvThread, NULL, receiveMsg, (void *)&val);
+  pthread_create(&sendThread, NULL, sendMsg, (void *)&values);
+  pthread_create(&recvThread, NULL, receiveMsg, (void *)&values);
 
   // Wait for threads to finish
-  pthread_join(sendThread, NULL);
   pthread_join(recvThread, NULL);
+  pthread_join(sendThread, NULL);
 
   if (close(dS) == -1)
   {
