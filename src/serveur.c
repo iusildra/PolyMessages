@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "serveur.h"
+#include "commandes.c"
 #define MAX_NB_CLIENTS 3
 
 struct userTuple
@@ -133,8 +134,13 @@ int recvSend(struct clientParams *param)
     printf("%s disconnect\n", connection.socks[param->position]->username);
     return 0;
   }
-
-  sendMsg(param, msg);
+  if (msg[0] == '/' && strcmp(msg, fin) != 0)
+    {
+      // executer(msg, *(param), connection);
+    }
+  else{
+    sendMsg(param, msg);
+    }
   free(msg);
   return 1;
 }
