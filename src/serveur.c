@@ -1,14 +1,15 @@
 #include <stdio.h>
-#include <sys/socket.h>
-#include <semaphore.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
+#include <signal.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 #include "serveur.h"
 // #include "commandes.c"
-#define MAX_NB_CLIENTS 3
+#define MAX_NB_CLIENTS 10
 
 struct userTuple
 {
@@ -26,13 +27,170 @@ struct parametres_struct
 };
 struct parametres_struct connection;
 
-struct clientParams
-{
-  size_t size;
-  unsigned short position;
-};
-
 sem_t nbPlaces;
+
+/**
+ * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
+ * 
+ * @param user information about the sender
+ * @param dest username of client to which the message is send
+ * @param msg message to send
+ * @return void* 
+ */
+void *messagePrive(struct userTuple *user, char *dest, char *msg)
+{
+
+  // faire la recherche de l'identifiant de l'utilisateur dans la future collection
+  int socket = -1;
+  int i = 0;
+  while (socket == -1 || i < connection.nbClients)
+  {
+    if (connection.socks[i] != NULL && connection.socks[i]->username == dest)
+    {
+      socket = connection.socks[i]->socket;
+    }
+    i++;
+  }
+  printf("Socket to send = %d", socket);
+
+  if (socket == -1)
+  {
+    char *msgAlert = "Cet utilisateur n'existe pas";
+    size_t fullSize = sizeof(char) * (strlen(msgAlert) + 1);
+
+    if (send(user->socket, &fullSize, sizeof(size_t), 0))
+    {
+      perror("error sendto server");
+      exit(1);
+    }
+    if (send(user->socket, "Cet utilisateur n'existe pas", fullSize, 0))
+    {
+      perror("error sendto server");
+      exit(1);
+    }
+  }
+
+  else
+  {
+    char *delimiter = " -> ";
+    size_t fullSize = sizeof(char) * (strlen(user->username) + strlen(delimiter) + strlen(msg) + 1);
+    char *fullMsg = malloc(fullSize);
+    strcpy(fullMsg, user->username);
+    strcat(fullMsg, delimiter);
+    strcat(fullMsg, msg);
+    char *clients[2];
+
+    if (send(socket, &fullSize, sizeof(size_t), 0))
+    {
+      perror("error sendto server");
+      exit(1);
+    }
+    if (send(socket, fullMsg, fullSize, 0))
+    {
+      perror("error sendto server");
+      exit(1);
+    }
+
+    // FINIR L'ENVOI AUX 2 UTILISATEURS AVEC clients[]
+
+    free(fullMsg);
+  }
+}
+
+/*
+Fonctionnalité de manuel :
+Ne prends pas de paramètres
+Lorsqu'un utilisateur se sert de cette fonction, liste les fonctionnalités disponibles, stockées dans un fichier texte
+Utilisation de la commande : /manuel
+*/
+void *manuelFonc()
+{
+  FILE *file;
+  file = fopen("manuelFonct.txt", "r");
+  char Buffer[128];
+  while (fgets(Buffer, 128, file))
+    printf("%s", Buffer);
+  fclose(file);
+}
+
+/**
+ * @brief Launch command execution
+ *
+ * @param msg the message to send
+ * @param user information about the sender
+ * @param nbClient number of clients
+ * @return void*
+ */
+void *executer(char *msg, int position)
+{
+  // séparation et récupération de chaque élément de la commande
+
+  char *motMsg = strtok(msg, " ");
+  char listeMot[4][1024] = {""};
+  strcpy(listeMot[0], motMsg);
+  printf("Substring=%s\n", listeMot[0]);
+  // redirection vers la commande de message privé
+  if (strcmp(listeMot[0], "/mp") == 0)
+  {
+    if (motMsg == NULL)
+    {
+      return NULL;
+    }
+    motMsg = strtok(NULL, " ");
+    strcpy(listeMot[1], motMsg);
+    size_t offset = strlen(listeMot[0]) + strlen(listeMot[1]) + 2; // Drop the command name and username (witht their whitespace...)
+    char *msgToSend = malloc(sizeof(char) * strlen(msg));
+    // printf("Username5 : %s\n", connection.socks[position]->username);
+    memcpy(msgToSend, msg + offset, strlen(msg) - offset);
+
+    messagePrive(connection.socks[position], listeMot[1], msgToSend);
+  }
+
+  // redirection vers la commande du manuel
+  if (strcmp(listeMot[0], "/help") == 0)
+  {
+    manuelFonc(connection.socks[position]);
+  }
+}
+
+void sendDisconnection(struct userTuple *user)
+{
+  char *end = "/DC";
+  size_t size = sizeof(char) * (strlen(end) + 1);
+  if (send(user->socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error sendto server");
+    exit(1);
+  }
+
+  // Send the message itself
+  if (send(user->socket, end, size, 0) == -1)
+  {
+    perror("error sendto server");
+    exit(1);
+  }
+  printf("%s disconnected\n", user->username);
+}
+
+/**
+ * @brief Verify that the given username doesn't already exists
+ *
+ * @param username the username to check
+ * @return int 0 if the name already exist, 1 otherwise
+ */
+int checkUsername(char *username, int pos)
+{
+  int i = 0;
+  while (i < connection.nbClients)
+  {
+    if (connection.socks[i] != NULL && i != pos && strcmp(connection.socks[i]->username, username) == 0)
+    {
+      return 0;
+    }
+    i++;
+  }
+  return 1;
+}
 
 /**
  * @brief Get the client's username
@@ -40,25 +198,26 @@ sem_t nbPlaces;
  * @param params information about the client who send the message (it's location in the array of client and the message's size)
  * @return char*
  */
-char *getUsername(struct clientParams *params)
+char *getUsername(int position)
 {
-  if (send(connection.socks[params->position]->socket, "Connection established", sizeof(char) * 23, 0) == -1)
+  size_t size;
+  if (send(connection.socks[position]->socket, "Connection established", sizeof(char) * 23, 0) == -1)
   {
     perror("error sendto server");
     exit(1);
   }
-  if (recv(connection.socks[params->position]->socket, &(params->size), sizeof(int), 0) == -1)
+  if (recv(connection.socks[position]->socket, &size, sizeof(int), 0) == -1)
   {
     perror("error recv serveur");
     exit(1);
   }
-  char *msg = malloc(sizeof(char) * params->size);
-  if (recv(connection.socks[params->position]->socket, msg, sizeof(char) * params->size, 0) == -1)
+  char *msg = malloc(sizeof(char) * size);
+  if (recv(connection.socks[position]->socket, msg, sizeof(char) * size, 0) == -1)
   {
     perror("error recv serveur");
     exit(1);
   }
-  char *username = malloc(sizeof(char) * (params->size - 1));
+  char *username = malloc(sizeof(char) * (size - 1));
   memcpy(username, msg, strlen(msg) - 1);
   free(msg);
   return username;
@@ -70,9 +229,9 @@ char *getUsername(struct clientParams *params)
  * @param param information about the client who send the message (it's location in the array of client and the message's size)
  * @param msg the message to be send
  */
-void sendMsg(struct clientParams *param, char *msg)
+void sendMsg(int position, char *msg)
 {
-  char *username = connection.socks[param->position]->username;
+  char *username = connection.socks[position]->username;
   char *delimiter = " -> ";
   for (int i = 0; i < connection.nbClients; i++)
   {
@@ -102,66 +261,6 @@ void sendMsg(struct clientParams *param, char *msg)
   }
 }
 
-void sendDisconnection(struct userTuple* user)
-{
-  char *end = "/DC";
-  size_t size = sizeof(char) * (strlen(end) + 1);
-  if (send(user->socket, &size, sizeof(size_t), 0) == -1)
-  {
-    perror("error sendto server");
-    exit(1);
-  }
-
-  // Send the message itself
-  if (send(user->socket, end, size, 0) == -1)
-  {
-    perror("error sendto server");
-    exit(1);
-  }
-  printf("%s disconnect\n", user->username);
-}
-
-/**
- * @brief Receive a message and broadcast it to everyone
- *
- * @param param information about the client who send the message (it's location in the array of client and the message's size)
- * @return int
- */
-int recvSend(struct clientParams *param)
-{
-  char *end = "/DC\n";
-  // Receive the message's size
-  if (recv(connection.socks[param->position]->socket, &(param->size), sizeof(size_t), 0) == -1)
-  {
-    perror("error recv server");
-    exit(1);
-  }
-
-  char *msg = malloc(sizeof(char) * (param->size));
-
-  // Receive the message itself
-  if (recv(connection.socks[param->position]->socket, msg, sizeof(char) * (param->size), 0) == -1)
-  {
-    perror("error recv server");
-    exit(1);
-  }
-  if (strcmp(msg, end) == 0)
-  {
-    sendDisconnection(connection.socks[param->position]);
-    return 0;
-  }
-  if (msg[0] == '/' && strcmp(msg, end) != 0)
-  {
-    // executer(msg, *(param), connection);
-  }
-  else
-  {
-    sendMsg(param, msg);
-  }
-  free(msg);
-  return 1;
-}
-
 /**
  * @brief Manage the client by allowing it to send messages and to deconnect
  *
@@ -171,19 +270,65 @@ int recvSend(struct clientParams *param)
 void *clientManagement(void *params)
 {
 
-  struct clientParams *param = (struct clientParams *)params;
+  int* position = (int *)params;
 
-  connection.socks[param->position]->username = getUsername(param);
-  printf("%s just connected !\n", connection.socks[param->position]->username);
+  connection.socks[*position]->username = getUsername(*position);
+  if (checkUsername(connection.socks[*position]->username, *position) == 0)
+  {
+    printf("Cannot connect, this username already exists !\n");
+    sendDisconnection(connection.socks[*position]);
+    shutdown(connection.socks[*position]->socket, 2);
+    connection.socks[*position] = NULL;
+    if (sem_post(&nbPlaces))
+    {
+      perror("sem post");
+      exit(1);
+    }
+    free(params);
+    pthread_exit(0);
+  }
+  printf("%s just connected !\n", connection.socks[*position]->username);
 
   // Loop as long as the client doesn't send '/DC'
-  while (recvSend(param))
+  while (1)
   {
+    char *end = "/DC\n";
+    size_t size;
+    // Receive the message's size
+    if (recv(connection.socks[*position]->socket, &size, sizeof(size_t), 0) == -1)
+    {
+      perror("error recv server");
+      exit(1);
+    }
+
+    char *msg = malloc(sizeof(char) * size);
+
+    // Receive the message itself
+    if (recv(connection.socks[*position]->socket, msg, sizeof(char) * size, 0) == -1)
+    {
+      perror("error recv server");
+      exit(1);
+    }
+    if (strcmp(msg, end) == 0)
+    {
+      sendDisconnection(connection.socks[*position]);
+      break;
+    }
+    if (msg[0] == '/' && strcmp(msg, end) != 0)
+    {
+      executer(msg, *position);
+    }
+    else
+    {
+      sendMsg(*position, msg);
+    }
+    free(msg);
   }
 
+  printf("End of transmission\n");
   // Close the socket and free the
-  shutdown(connection.socks[param->position]->socket, 2);
-  connection.socks[param->position] = NULL;
+  shutdown(connection.socks[*position]->socket, 2);
+  connection.socks[*position] = NULL;
   if (sem_post(&nbPlaces))
   {
     perror("sem post");
@@ -224,14 +369,14 @@ void *userLogin()
       exit(1);
     };
 
-    struct clientParams *clientParams = malloc(sizeof(struct clientParams));
+    int* position = malloc(sizeof(int));
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
     int i = getIndex();
-    clientParams->position = i;
+    *position = i;
     connection.socks[i] = user;
 
-    if (pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams) == -1)
+    if (pthread_create(&thread[i], NULL, clientManagement, (void *)position) == -1)
     {
       perror("error clientManagement server");
       exit(1);
@@ -241,6 +386,21 @@ void *userLogin()
       connection.nbClients++;
     }
   } while (1);
+}
+
+void terminateEveryClient(int n)
+{
+  int i = 0;
+  while (i < connection.nbClients)
+  {
+    struct userTuple *user = connection.socks[i];
+    if (user != NULL)
+    {
+      sendDisconnection(user);
+      i++;
+    }
+  }
+  exit(0);
 }
 
 /**
@@ -292,6 +452,8 @@ int main(int argc, char *argv[])
   struct sockaddr_in aC;
   connection.aC = aC;
   connection.lg = sizeof(struct sockaddr_in);
+
+  signal(SIGINT, terminateEveryClient);
 
   userLogin(&nbPlaces);
 
