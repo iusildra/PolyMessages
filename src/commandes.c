@@ -60,12 +60,12 @@ void* messagePrive(char* expe, char* dest, char* msg){
             numdest = i;
         }
     }
-    if (send(param->connection.socks[numdest], msg, param->size, 0)
+    if (send(param->connection.socks[numdest], msg, param->size, 0))
     {
       perror("error sendto server");
       exit(1);
     }
-    if (send(param->connection.socks[numdest], msg, param->size, 0)
+    if (send(param->connection.socks[numdest], msg, param->size, 0))
     {
       perror("error sendto server");
       exit(1);
@@ -79,10 +79,13 @@ Ne prends pas de paramètres
 Lorsqu'un utilisateur se sert de cette fonction, liste les fonctionnalités disponibles, stockées dans un fichier texte
 Utilisation de la commande : /manuel
 */
-void * manuelFonc(char* user){
-  
-}
-
+void * manuelFonc(){
+  FILE* file; 
+  file = fopen("manuelFonct.txt","r"); 
+  char Buffer[128]; 
+  while( fgets(Buffer,128,file) ) 
+  printf("%s",Buffer); 
+  fclose(file); 
 
 /* 
 Fonctionnalité de déconnexion :
