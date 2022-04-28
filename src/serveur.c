@@ -27,8 +27,11 @@ struct parametres_struct connection;
 struct clientParams
 {
   size_t size;
+  sem_t* sem;
   unsigned short position;
 };
+
+
 
 
 /**
@@ -156,6 +159,11 @@ void *clientManagement(void *params)
   // Close the socket and free the
   shutdown(connection.socks[param->position]->socket, 2);
   connection.socks[param->position] = NULL;
+  if (sem_post(param->sem))
+  {
+    perror("sem post");
+      exit(1);
+  }
   free(params);
   pthread_exit(0);
 }
@@ -180,17 +188,27 @@ int getIndex()
  *
  * @return void*
  */
-void *userLogin()
+void *userLogin(sem_t* sem)
 {
   pthread_t thread[MAX_NB_CLIENTS];
   do
   {
+    if (sem_wait(sem))
+    {
+      perror("sem wait");
+      exit(1);
+    };
+
     struct clientParams *clientParams = malloc(sizeof(struct clientParams));
     int i = getIndex();
+    clientParams->position = i;
+    clientParams->sem = sem;
+
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
-    clientParams->position = i;
+
     connection.socks[i] = user;
+
     if (pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams) == -1)
     {
       perror("error clientManagement server");
@@ -213,6 +231,13 @@ void *userLogin()
 int main(int argc, char *argv[])
 {
   printf("Début programme\n");
+
+  sem_t nbPlaces;
+  if (sem_init(&nbPlaces, 0, MAX_NB_CLIENTS))
+  {
+    perror("Innit Semaphore");
+    exit(1);
+  }
 
   connection.dS = socket(PF_INET, SOCK_STREAM, 0);
   if (connection.dS < 0)
@@ -246,7 +271,13 @@ int main(int argc, char *argv[])
   connection.aC = aC;
   connection.lg = sizeof(struct sockaddr_in);
 
-  userLogin();
+  userLogin(&nbPlaces);
+
+  if (sem_destroy(&nbPlaces))
+  {
+    perror("sem destroy");
+    exit(1);
+  }
 
   // shutdown(dS2C, 2);
   // shutdown(dSC, 2);
