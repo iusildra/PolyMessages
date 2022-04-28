@@ -1,0 +1,43 @@
+@startuml architecture
+
+together {
+	package Serveur.c {
+		package ClientThreads {
+			component client1Thread as c1
+			component clientxThread as cx
+			component clientnThread as cn
+		}
+		' c1 -[hidden]d- cx
+		' cx -[hidden]d- cn
+
+		package Threads {
+			component sendFromAtoBThread
+			component recvFromAtoBThread
+			sendFromAtoBThread -[hidden]d- recvFromAtoBThread
+
+		}
+		c1 --> Threads
+		cx --> Threads
+		cn --> Threads
+		artifact connectionParameters as param
+		artifact semaphore as sem
+		artifact mutex
+		param <-u- ClientThreads
+		param --> sem
+		param --> mutex
+	}
+
+
+	package Client.c {
+		together {
+			component sendThread as sendThread
+			component recvThread as recvThread
+		}
+
+	}
+}
+interface TCP
+
+TCP <--> Client.c
+TCP <--> Serveur.c
+@enduml

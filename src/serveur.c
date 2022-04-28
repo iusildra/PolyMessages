@@ -208,12 +208,10 @@ void *userLogin()
     };
 
     struct clientParams *clientParams = malloc(sizeof(struct clientParams));
-    int i = getIndex();
-    clientParams->position = i;
-
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
-
+    int i = getIndex();
+    clientParams->position = i;
     connection.socks[i] = user;
 
     if (pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams) == -1)

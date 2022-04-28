@@ -1,0 +1,54 @@
+@startuml protocole
+
+skinparam responseMessageBelowArrow true
+
+==NOT COMPLETED==
+actor Bob 
+participant "Bob's client" as Client1
+participant Server
+
+activate Server
+==Connexion (asynchrone)==
+autonumber "<b>[00]"
+Bob -> Client1++: start
+Client1 -> Server: ask for connection
+Server --> Client1: connection confirmation\ngetUsername()
+Client1 --> Bob: ask for username
+Bob -> Client1: enter username
+Client1 -> Server: sendUsername()
+alt username available
+Server --> Client1: send login confirmation
+Client1 --> Bob: ready
+else
+Server --> Client1: reject login
+Client1 --x Bob: terminate
+end
+
+==Échange de message==
+
+par
+autonumber 0-0
+Bob -> Client1 : write message
+Client1 -> Server: transmit message's size
+Client1 -> Server: transmit message
+else
+autonumber 1-0
+Server -> Client1: send message's size
+Server -> Client1: send message
+Client1 -> Bob: receive message
+end
+==Commandes==
+alt /mp <username>
+Bob -> Client1: write message to\n <username>
+Client1 -> Server: transmit message's\nsize to <username>
+Client1 -> Server: transmit message\nto <username>
+else
+end
+alt /DC
+Bob -> Client1: write "/DC"
+Client1 -> Server: ask for deconnection
+Server --> Client1: deconnect client
+Client1 --> Bob--: confirm deconnection
+else
+end
+@enduml
