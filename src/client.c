@@ -36,11 +36,6 @@ void *sendMsg(void *val)
     char *msg = malloc(sizeof(char) * maxSize);
 
     fgets(msg, maxSize, stdin);
-    if (msg[0] == '/' && strcmp(msg, fin) != 0)
-    {
-      // executer(msg, param->username);
-      continue;
-    }
     size = strlen(msg) + 1;
 
     // Send the size of the message
