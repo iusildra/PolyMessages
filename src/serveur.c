@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sys/socket.h>
+#include <semaphore.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,9 +28,10 @@ struct parametres_struct connection;
 struct clientParams
 {
   size_t size;
-  sem_t* sem;
   unsigned short position;
 };
+
+sem_t* nbPlaces;
 
 
 
@@ -159,7 +161,7 @@ void *clientManagement(void *params)
   // Close the socket and free the
   shutdown(connection.socks[param->position]->socket, 2);
   connection.socks[param->position] = NULL;
-  if (sem_post(param->sem))
+  if (sem_post(nbPlaces))
   {
     perror("sem post");
       exit(1);
@@ -188,12 +190,12 @@ int getIndex()
  *
  * @return void*
  */
-void *userLogin(sem_t* sem)
+void *userLogin()
 {
   pthread_t thread[MAX_NB_CLIENTS];
   do
   {
-    if (sem_wait(sem))
+    if (sem_wait(nbPlaces))
     {
       perror("sem wait");
       exit(1);
@@ -202,7 +204,6 @@ void *userLogin(sem_t* sem)
     struct clientParams *clientParams = malloc(sizeof(struct clientParams));
     int i = getIndex();
     clientParams->position = i;
-    clientParams->sem = sem;
 
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
@@ -232,8 +233,7 @@ int main(int argc, char *argv[])
 {
   printf("Début programme\n");
 
-  sem_t nbPlaces;
-  if (sem_init(&nbPlaces, 0, MAX_NB_CLIENTS))
+  if (sem_init(nbPlaces, 0, MAX_NB_CLIENTS))
   {
     perror("Innit Semaphore");
     exit(1);
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 
   userLogin(&nbPlaces);
 
-  if (sem_destroy(&nbPlaces))
+  if (sem_destroy(nbPlaces))
   {
     perror("sem destroy");
     exit(1);
