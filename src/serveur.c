@@ -30,13 +30,45 @@ struct clientParams
   unsigned short position;
 };
 
+
+/**
+ * @brief Get the client's username
+ *
+ * @param params information about the client who send the message (it's location in the array of client and the message's size)
+ * @return char*
+ */
+char *getUsername(struct clientParams *params)
+{
+  if (send(connection.socks[params->position]->socket, "Connection established", sizeof(char) * 23, 0) == -1)
+  {
+    perror("error sendto server");
+    exit(1);
+  }
+  if (recv(connection.socks[params->position]->socket, &(params->size), sizeof(int), 0) == -1)
+  {
+    perror("error recv serveur");
+    exit(1);
+  }
+  char *msg = malloc(sizeof(char) * params->size);
+  if (recv(connection.socks[params->position]->socket, msg, sizeof(char) * params->size, 0) == -1)
+  {
+    perror("error recv serveur");
+    exit(1);
+  }
+  char *username = malloc(sizeof(char) * (params->size - 1));
+  memcpy(username, msg, strlen(msg) - 1);
+  free(msg);
+  return username;
+}
+
 /**
  * @brief Broadcast a message
- * 
+ *
  * @param param information about the client who send the message (it's location in the array of client and the message's size)
  * @param msg the message to be send
  */
-void sendMsg(struct clientParams* param, char* msg) {
+void sendMsg(struct clientParams *param, char *msg)
+{
   char *username = connection.socks[param->position]->username;
   char *delimiter = " -> ";
   for (int i = 0; i < connection.nbClients; i++)
@@ -69,9 +101,9 @@ void sendMsg(struct clientParams* param, char* msg) {
 
 /**
  * @brief Receive a message and broadcast it to everyone
- * 
+ *
  * @param param information about the client who send the message (it's location in the array of client and the message's size)
- * @return int 
+ * @return int
  */
 int recvSend(struct clientParams *param)
 {
@@ -104,21 +136,24 @@ int recvSend(struct clientParams *param)
 
 /**
  * @brief Manage the client by allowing it to send messages and to deconnect
- * 
+ *
  * @param params information about the client who send the message (it's location in the array of client and the message's size)
- * @return void* 
+ * @return void*
  */
 void *clientManagement(void *params)
 {
 
   struct clientParams *param = (struct clientParams *)params;
 
-  //Loop as long as the client doesn't send '/DC'
+  connection.socks[param->position]->username = getUsername(param);
+  printf("%s just connected !\n", connection.socks[param->position]->username);
+
+  // Loop as long as the client doesn't send '/DC'
   while (recvSend(param))
   {
   }
 
-  //Close the socket and free the 
+  // Close the socket and free the
   shutdown(connection.socks[param->position]->socket, 2);
   connection.socks[param->position] = NULL;
   free(params);
@@ -127,8 +162,8 @@ void *clientManagement(void *params)
 
 /**
  * @brief Get the first index available in the array of client
- * 
- * @return int 
+ *
+ * @return int
  */
 int getIndex()
 {
@@ -141,39 +176,9 @@ int getIndex()
 }
 
 /**
- * @brief Get the client's username
- * 
- * @param params information about the client who send the message (it's location in the array of client and the message's size)
- * @return char* 
- */
-char *getUsername(struct clientParams *params)
-{
-  if (send(connection.socks[params->position]->socket, "Connection established", sizeof(char) * 23, 0) == -1)
-  {
-    perror("error sendto server");
-    exit(1);
-  }
-  if (recv(connection.socks[params->position]->socket, &(params->size), sizeof(int), 0) == -1)
-  {
-    perror("error recv serveur");
-    exit(1);
-  }
-  char *msg = malloc(sizeof(char) * params->size);
-  if (recv(connection.socks[params->position]->socket, msg, sizeof(char) * params->size, 0) == -1)
-  {
-    perror("error recv serveur");
-    exit(1);
-  }
-  char *username = malloc(sizeof(char) * (params->size - 1));
-  memcpy(username, msg, strlen(msg) - 1);
-  free(msg);
-  return username;
-}
-
-/**
- * @brief Manage client login by allowing it to connect and adding it to the array of client 
- * 
- * @return void* 
+ * @brief Manage client login by allowing it to connect and adding it to the array of client
+ *
+ * @return void*
  */
 void *userLogin()
 {
@@ -186,8 +191,6 @@ void *userLogin()
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
     clientParams->position = i;
     connection.socks[i] = user;
-    user->username = getUsername(clientParams);
-    printf("%s just connected !\n", user->username);
     if (pthread_create(&thread[i], NULL, clientManagement, (void *)clientParams) == -1)
     {
       perror("error clientManagement server");
@@ -202,10 +205,10 @@ void *userLogin()
 
 /**
  * @brief Runs the server
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main(int argc, char *argv[])
 {

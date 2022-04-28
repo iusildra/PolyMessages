@@ -189,6 +189,7 @@ int main(int argc, char *argv[])
 
   // Wait for threads to finish
   pthread_join(sendThread, NULL);
+  pthread_join(recvThread, NULL);
 
   if (close(dS) == -1)
   {
