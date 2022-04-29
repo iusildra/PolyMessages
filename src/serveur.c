@@ -8,14 +8,9 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "serveur.h"
-// #include "commandes.c"
+#include "commandes.h"
 #define MAX_NB_CLIENTS 10
 
-struct userTuple
-{
-  char *username;
-  int socket;
-};
 // Parameters needed to send/receive a message
 struct parametres_struct
 {
@@ -26,132 +21,7 @@ struct parametres_struct
   struct sockaddr_in aC;
 };
 struct parametres_struct connection;
-
 sem_t nbPlaces;
-
-/**
- * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
- * 
- * @param user information about the sender
- * @param dest username of client to which the message is send
- * @param msg message to send
- * @return void* 
- */
-void *messagePrive(struct userTuple *user, char *dest, char *msg)
-{
-
-  // faire la recherche de l'identifiant de l'utilisateur dans la future collection
-  int socket = -1;
-  int i = 0;
-  while (socket == -1 || i < connection.nbClients)
-  {
-    if (connection.socks[i] != NULL && connection.socks[i]->username == dest)
-    {
-      socket = connection.socks[i]->socket;
-    }
-    i++;
-  }
-  printf("Socket to send = %d", socket);
-
-  if (socket == -1)
-  {
-    char *msgAlert = "Cet utilisateur n'existe pas";
-    size_t fullSize = sizeof(char) * (strlen(msgAlert) + 1);
-
-    if (send(user->socket, &fullSize, sizeof(size_t), 0))
-    {
-      perror("error sendto server");
-      exit(1);
-    }
-    if (send(user->socket, "Cet utilisateur n'existe pas", fullSize, 0))
-    {
-      perror("error sendto server");
-      exit(1);
-    }
-  }
-
-  else
-  {
-    char *delimiter = " -> ";
-    size_t fullSize = sizeof(char) * (strlen(user->username) + strlen(delimiter) + strlen(msg) + 1);
-    char *fullMsg = malloc(fullSize);
-    strcpy(fullMsg, user->username);
-    strcat(fullMsg, delimiter);
-    strcat(fullMsg, msg);
-    char *clients[2];
-
-    if (send(socket, &fullSize, sizeof(size_t), 0))
-    {
-      perror("error sendto server");
-      exit(1);
-    }
-    if (send(socket, fullMsg, fullSize, 0))
-    {
-      perror("error sendto server");
-      exit(1);
-    }
-
-    // FINIR L'ENVOI AUX 2 UTILISATEURS AVEC clients[]
-
-    free(fullMsg);
-  }
-}
-
-/*
-Fonctionnalité de manuel :
-Ne prends pas de paramètres
-Lorsqu'un utilisateur se sert de cette fonction, liste les fonctionnalités disponibles, stockées dans un fichier texte
-Utilisation de la commande : /manuel
-*/
-void *manuelFonc()
-{
-  FILE *file;
-  file = fopen("manuelFonct.txt", "r");
-  char Buffer[128];
-  while (fgets(Buffer, 128, file))
-    printf("%s", Buffer);
-  fclose(file);
-}
-
-/**
- * @brief Launch command execution
- *
- * @param msg the message to send
- * @param user information about the sender
- * @param nbClient number of clients
- * @return void*
- */
-void *executer(char *msg, int position)
-{
-  // séparation et récupération de chaque élément de la commande
-
-  char *motMsg = strtok(msg, " ");
-  char listeMot[4][1024] = {""};
-  strcpy(listeMot[0], motMsg);
-  printf("Substring=%s\n", listeMot[0]);
-  // redirection vers la commande de message privé
-  if (strcmp(listeMot[0], "/mp") == 0)
-  {
-    if (motMsg == NULL)
-    {
-      return NULL;
-    }
-    motMsg = strtok(NULL, " ");
-    strcpy(listeMot[1], motMsg);
-    size_t offset = strlen(listeMot[0]) + strlen(listeMot[1]) + 2; // Drop the command name and username (witht their whitespace...)
-    char *msgToSend = malloc(sizeof(char) * strlen(msg));
-    // printf("Username5 : %s\n", connection.socks[position]->username);
-    memcpy(msgToSend, msg + offset, strlen(msg) - offset);
-
-    messagePrive(connection.socks[position], listeMot[1], msgToSend);
-  }
-
-  // redirection vers la commande du manuel
-  if (strcmp(listeMot[0], "/help") == 0)
-  {
-    manuelFonc(connection.socks[position]);
-  }
-}
 
 void sendDisconnection(struct userTuple *user)
 {
@@ -183,7 +53,7 @@ int checkUsername(char *username, int pos)
   int i = 0;
   while (i < connection.nbClients)
   {
-    if (connection.socks[i] != NULL && i != pos && strcmp(connection.socks[i]->username, username) == 0)
+    if (connection.socks[i] != NULL && connection.socks[i]->username != NULL && i != pos && strcmp(connection.socks[i]->username, username) == 0)
     {
       return 0;
     }
@@ -270,7 +140,7 @@ void sendMsg(int position, char *msg)
 void *clientManagement(void *params)
 {
 
-  int* position = (int *)params;
+  int *position = (int *)params;
 
   connection.socks[*position]->username = getUsername(*position);
   if (checkUsername(connection.socks[*position]->username, *position) == 0)
@@ -316,7 +186,7 @@ void *clientManagement(void *params)
     }
     if (msg[0] == '/' && strcmp(msg, end) != 0)
     {
-      executer(msg, *position);
+      executer(connection.socks, connection.nbClients, msg, *position);
     }
     else
     {
@@ -369,7 +239,7 @@ void *userLogin()
       exit(1);
     };
 
-    int* position = malloc(sizeof(int));
+    int *position = malloc(sizeof(int));
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
     int i = getIndex();
