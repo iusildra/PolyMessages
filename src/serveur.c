@@ -28,6 +28,7 @@ struct parametres_struct
 struct parametres_struct connection;
 
 sem_t nbPlaces;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /**
  * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
@@ -277,8 +278,10 @@ void *clientManagement(void *params)
   {
     printf("Cannot connect, this username already exists !\n");
     sendDisconnection(connection.socks[*position]);
+    pthread_mutex_lock(&mutex);
     shutdown(connection.socks[*position]->socket, 2);
     connection.socks[*position] = NULL;
+    pthread_mutex_unlock(&mutex);
     if (sem_post(&nbPlaces))
     {
       perror("sem post");
@@ -320,7 +323,9 @@ void *clientManagement(void *params)
     }
     else
     {
+      pthread_mutex_lock(&mutex);
       sendMsg(*position, msg);
+      pthread_mutex_unlock(&mutex);
     }
     free(msg);
   }
@@ -374,7 +379,10 @@ void *userLogin()
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
     int i = getIndex();
     *position = i;
+    //when a client connect and doesn't enter a username, if an another client connect, the server has a segmentation fault
+    pthread_mutex_lock(&mutex);
     connection.socks[i] = user;
+    pthread_mutex_unlock(&mutex);
 
     if (pthread_create(&thread[i], NULL, clientManagement, (void *)position) == -1)
     {
