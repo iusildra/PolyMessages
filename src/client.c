@@ -91,7 +91,7 @@ void *receiveMsg(void *params)
     }
     if (strcmp(end, msg) == 0)
     {
-      printf("Disconnection complete");
+      printf("Disconnection complete\n");
       exit(0);
     }
 
