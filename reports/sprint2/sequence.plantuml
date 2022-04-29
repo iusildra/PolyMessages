@@ -2,17 +2,16 @@
 
 skinparam responseMessageBelowArrow true
 
-==NOT COMPLETED==
 actor Bob 
 participant "Bob's client" as Client1
 participant Server
 
-activate Server
-==Connexion (asynchrone)==
+===Connexion (asynchrone entre client)===
 autonumber "<b>[00]"
 Bob -> Client1++: start
+activate Server
 Client1 -> Server: ask for connection
-Server --> Client1: connection confirmation\ngetUsername()
+Server --> Client1: connection confirmation\n + getUsername()
 Client1 --> Bob: ask for username
 Bob -> Client1: enter username
 Client1 -> Server: sendUsername()
@@ -22,33 +21,47 @@ Client1 --> Bob: ready
 else
 Server --> Client1: reject login
 Client1 --x Bob: terminate
+destroy Client1
 end
+deactivate Server
 
-==Échange de message==
+===Échange de message (asynchrone entre client)===
 
+activate Server
 par
 autonumber 0-0
-Bob -> Client1 : write message
+Bob -> Client1++ : write message
+activate Server
 Client1 -> Server: transmit message's size
 Client1 -> Server: transmit message
 else
 autonumber 1-0
-Server -> Client1: send message's size
-Server -> Client1: send message
-Client1 -> Bob: receive message
+Server --> Client1: send message's size
+Server --> Client1: send message
+Client1 --> Bob: receive message's size
+Client1 --> Bob--: receive message
 end
-==Commandes==
-alt /mp <username>
-Bob -> Client1: write message to\n <username>
+deactivate Server
+===Commandes===
+==/mp <username>==
+Bob -> Client1++: write message to\n <username>
+activate Server
 Client1 -> Server: transmit message's\nsize to <username>
 Client1 -> Server: transmit message\nto <username>
+alt <username> exists
+Server -> Client1: confirmation
+Client1 -> Bob: confirmation
 else
+Server -> Client1: error
+Client1 -> Bob--: "this client doesn't\nexist"
 end
-alt /DC
-Bob -> Client1: write "/DC"
+deactivate Server
+==/DC or ^C==
+Bob -> Client1++: write "/DC"
+activate Server
 Client1 -> Server: ask for deconnection
 Server --> Client1: deconnect client
 Client1 --> Bob--: confirm deconnection
-else
-end
+destroy Client1
+deactivate Server
 @enduml

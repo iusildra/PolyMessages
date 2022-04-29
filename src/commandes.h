@@ -1,12 +1,35 @@
-/* 
-Fonctionnalité de message privé
-Prends en paramètre l'utilisateur dest à qui envoyer le mp,l'utilisateur expe qui envoie le mp ainsi que le message msg à envoyer
-Envoie un message que seule la personne en paramètre et la personne qui a envoyé le message peut voir
-*/
-void* messagePrive(int expe, int dest, char* msg);
-//envoie la liste des fonctions disponibles à l'utilisateur d'id user
-void help(int user);
-//lit le string str, detecte si une fonction est demandé, lance la fonction si elle exite, un msg d'erreurs à l'utilisateur sinon
-void detectFonc(char* str);
-//deconnecte l'utilisateur d'id user
+struct userTuple
+{
+	char *username;
+	int socket;
+};
+
+/**
+ * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
+ *
+ * @param user information about the sender
+ * @param dest username of client to which the message is send
+ * @param msg message to send
+ * @return void*
+ */
+int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *user, char *dest, char *msg);
+/**
+ * @brief Man page : list every commands available
+ *
+ * @return void*
+ */
+void *help();
+/**
+ * @brief Dispatch the requested command to the right function
+ *
+ * @param msg the message containing the command toe execute
+ * @param position the position of the user in the array of sockets
+ * @return void*
+ */
+void *executer(struct userTuple** sockets, int nbClient, char *msg, int position);
+/**
+ * @brief Deconnect a client
+ *
+ * @param user
+ */
 void deco(int user);

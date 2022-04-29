@@ -38,6 +38,7 @@ void *sendMsg(void *val)
 
     fgets(msg, maxSize, stdin);
     size = strlen(msg) + 1;
+    if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
 
     // Send the size of the message
     if (send(param->socket, &size, sizeof(size_t), 0) == -1)
@@ -125,7 +126,9 @@ void sendUsername(struct values *params)
 
   printf("Enter your username (length must be <= %d): ", usernameMaxSize);
   msg = malloc(sizeof(char) * usernameMaxSize);
-  fgets(msg, usernameMaxSize, stdin);
+  do {
+    fgets(msg, usernameMaxSize, stdin);
+  } while (strlen(msg) == 1); //strlen(msg==1) <=> msg = "\n\0"
 
   // Send the size of the message
   if (send(params->socket, &usernameMaxSize, sizeof(int), 0) == -1)
