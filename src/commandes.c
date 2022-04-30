@@ -78,13 +78,25 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
   return 0;
 }
 
-void *help()
+void *help(struct userTuple* socket)
 {
   FILE *file;
   file = fopen("manuelFonct.txt", "r");
   char Buffer[128];
-  while (fgets(Buffer, 128, file))
-    printf("%s", Buffer);
+  size_t sizeBuff = 128;
+  while (fgets(Buffer, 128, file)){
+    printf("%ld\n", sizeBuff);
+    if (send(socket->socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(socket->socket, Buffer, sizeBuff, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+  }
   fclose(file);
 }
 
@@ -102,10 +114,12 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
 
   char *motMsg = strtok(msg, " ");
   char listeMot[4][1024] = {""};
+  int recognized = 0;
   strcpy(listeMot[0], motMsg);
   // redirection vers la commande de message privé
   if (strcmp(listeMot[0], "/mp") == 0)
   {
+    recognized = 1;
     if (motMsg == NULL)
     {
       return NULL;
@@ -120,8 +134,24 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
   }
 
   // redirection vers la commande du manuel
-  if (strcmp(listeMot[0], "/help") == 0)
+  if (strcmp(listeMot[0], "/help\n") == 0)
   {
+    recognized = 1;
     help(sockets[position]);
+  }
+
+  if (recognized == 0){
+    char* nopMsg = "This command is not recognized\n";
+    size_t nopSize = 31;
+    if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(sockets[position]->socket, nopMsg, nopSize, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
   }
 }
