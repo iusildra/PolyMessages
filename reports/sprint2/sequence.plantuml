@@ -1,67 +1,83 @@
-@startuml protocole
+@startuml sequence
 
 skinparam responseMessageBelowArrow true
 
 actor Bob 
-participant "Bob's client" as Client1
+participant "Bob's client" as Client
 participant Server
 
-===Connexion (asynchrone entre client)===
+===Connexion (asynchrone entre client)==
 autonumber "<b>[00]"
-Bob -> Client1++: start
+Bob -> Client++: start
 activate Server
-Client1 -> Server: ask for connection
-Server --> Client1: connection confirmation\n + getUsername()
-Client1 --> Bob: ask for username
-Bob -> Client1: enter username
-Client1 -> Server: sendUsername()
+Client -> Server: ask for connection
+Server --> Client: connection confirmation\n + getUsername()
+Client --> Bob: ask for username
+Bob -> Client: enter username
+Client -> Server: sendUsername()
 alt username available
-Server --> Client1: send login confirmation
-Client1 --> Bob: ready
+Server --> Client: send login confirmation
+Client --> Bob: ready
 else
-Server --> Client1: reject login
-Client1 --x Bob: terminate
-destroy Client1
+Server --> Client: reject login
+Client --x Bob: terminate
+destroy Client
 end
 deactivate Server
 
-===Échange de message (asynchrone entre client)===
+===Échange de message (asynchrone entre client)==
 
 activate Server
 par
 autonumber 0-0
-Bob -> Client1++ : write message
+Bob -> Client++ : write message
 activate Server
-Client1 -> Server: transmit message's size
-Client1 -> Server: transmit message
+Client -> Server: transmit message's size
+Client -> Server: transmit message
 else
 autonumber 1-0
-Server --> Client1: send message's size
-Server --> Client1: send message
-Client1 --> Bob: receive message's size
-Client1 --> Bob--: receive message
+Server --> Client: send message's size
+Server --> Client: send message
+Client --> Bob: receive message's size
+Client --> Bob--: receive message
 end
 deactivate Server
-===Commandes===
+@enduml
+@startuml commands
+skinparam responseMessageBelowArrow true
+
+actor Bob 
+participant "Bob's client" as Client
+participant Server
+===Commandes==
 ==/mp <username>==
-Bob -> Client1++: write message to\n <username>
+Bob -> Client++: write message to\n <username>
 activate Server
-Client1 -> Server: transmit message's\nsize to <username>
-Client1 -> Server: transmit message\nto <username>
+Client -> Server: transmit message
+Server -> Server: dispatch
 alt <username> exists
-Server -> Client1: confirmation
-Client1 -> Bob: confirmation
+Server -> Client: confirmation
+Client -> Bob: print written\nmessage
 else
-Server -> Client1: error
-Client1 -> Bob--: "this client doesn't\nexist"
+Server -> Client: error
+Client -> Bob--: "this client doesn't\nexist"
 end
+deactivate Server
+==/help==
+Bob -> Client++: write "/help"
+activate Server
+Client -> Server: transmit message
+Server -> Server: dispatch
+Server -> Client: return the list\nof commands
+Client -> Bob--: print the list\nof commands
 deactivate Server
 ==/DC or ^C==
-Bob -> Client1++: write "/DC"
+Bob -> Client++: write "/DC"
 activate Server
-Client1 -> Server: ask for deconnection
-Server --> Client1: deconnect client
-Client1 --> Bob--: confirm deconnection
-destroy Client1
+Client -> Server: transmit message
+Server -> Server: catch\nrequest
+Server --> Client: deconnect client
+Client --> Bob--: confirm deconnection
+destroy Client
 deactivate Server
 @enduml

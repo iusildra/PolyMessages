@@ -1,7 +1,7 @@
 @startuml architecture
 
 together {
-	package Serveur.c {
+	package Serveur.c as Server {
 		package ClientThreads {
 			component client1Thread as c1
 			component clientxThread as cx
@@ -25,19 +25,47 @@ together {
 		param <-u- ClientThreads
 		param --> sem
 		param --> mutex
+
+		note bottom of mutex 
+		protection de la liste
+		des clients
+		end note
+		note bottom of sem
+		mise en sommeil lorsque
+		le nombre de client max
+		est atteint
+		end note
 	}
 
 
-	package Client.c {
+	package Client.c as Client {
 		together {
 			component sendThread as sendThread
 			component recvThread as recvThread
 		}
-
 	}
+
+	package Commandes.c as Commands {
+		artifact help
+		artifact mp
+
+		note bottom of help
+		send to the client
+		the commands list
+		end note
+
+		note bottom of mp
+		send a message to a
+		specific user only
+		end note
+	}
+
+
 }
 interface TCP
 
-TCP <--> Client.c
-TCP <--> Serveur.c
+TCP <--> Client
+Client -[hidden]d- Commands 
+Server <--> Commands
+TCP <--> Server
 @enduml
