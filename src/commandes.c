@@ -43,7 +43,7 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
       perror("error send server size");
       exit(1);
     }
-    if (send(user->socket, "Cet utilisateur n'existe pas", fullSize, 0) == -1)
+    if (send(user->socket, msgAlert, fullSize, 0) == -1)
     {
       perror("error send server msg");
       exit(1);
@@ -85,7 +85,6 @@ void *help(struct userTuple* socket)
   char Buffer[128];
   size_t sizeBuff = 128;
   while (fgets(Buffer, 128, file)){
-    printf("%ld\n", sizeBuff);
     if (send(socket->socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
       perror("error sendto server size");

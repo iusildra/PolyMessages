@@ -27,6 +27,7 @@ void *help();
  * @return void*
  */
 void *executer(struct userTuple** sockets, int nbClient, char *msg, int position);
+
 /**
  * @brief Deconnect a client
  *
