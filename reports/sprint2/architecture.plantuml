@@ -3,26 +3,13 @@
 together {
 	package Serveur.c as Server {
 		package ClientThreads {
-			component client1Thread as c1
-			component clientxThread as cx
-			component clientnThread as cn
+			component clientManagement as cx
 		}
-		' c1 -[hidden]d- cx
-		' cx -[hidden]d- cn
 
-		package Threads {
-			component sendFromAtoBThread
-			component recvFromAtoBThread
-			sendFromAtoBThread -[hidden]d- recvFromAtoBThread
-
-		}
-		c1 --> Threads
-		cx --> Threads
-		cn --> Threads
 		artifact connectionParameters as param
 		artifact semaphore as sem
 		artifact mutex
-		param <-u- ClientThreads
+		param <-- ClientThreads
 		param --> sem
 		param --> mutex
 

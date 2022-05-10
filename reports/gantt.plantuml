@@ -81,16 +81,16 @@ Project starts 2022-04-11
 ' SPRINT II
 -- SPRINT II --
 [Gestion multi-client] as [MCH] starts 2022-04-19 and lasts 4 days
-[Message Privé] as [MP] starts 2022-04-19 and lasts 4 days
+[Message Privé] as [MP] starts 2022-04-20 and lasts 4 days
 [Manuel] as [Help] starts 2022-04-25 and lasts 3 days
 [Intégrité] as [Int] lasts 2 days
 [Code review] as [CR] starts 2022-04-26 and lasts 4 days
 
 [CR] on {Lucas:100%} lasts 4 days
 [MCH] on {Lucas:100%} lasts 4 days
-[MP] on {Marvin:50%} lasts 3 days
-[Help] on {Éri:100%} lasts 3 days
+[MP] on {Marvin:100%} lasts 4 days
 ' [Help] on {Marvin:100%} lasts 2 days
+[Help] on {Éri:100%} lasts 3 days
 [Intégrité] on {Éri:100%} starts 2022-04-25 and lasts 2 days
 
 [F] -> [MCH]

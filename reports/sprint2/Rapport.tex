@@ -18,7 +18,7 @@
 	colorlinks=true,
 	breaklinks=true,
 	linkcolor=black,
-	pdftitle={PolyMessages - Sprint 1}
+	pdftitle={PolyMessages - Sprint 2}
 }
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
@@ -58,9 +58,9 @@
 
 \captionsetup{labelfont={it, bf}, textfont={it}}
 
-\title{PolyMessages | Sprint 1}
+\title{PolyMessages | Sprint 2}
 \author{Eri Agnese, Marvin Bontemps, Lucas Nouguier}
-\date{17 Avril 2022}
+\date{01 Mai 2022}
 
 \begin{document}
 \maketitle
@@ -96,6 +96,7 @@
 	\begin{tabular}{cccc}
 		\toprule
 		\multirow{2}{*}{Tâches} & \multicolumn{3}{c}{Étudiants}\\
+		\cmidrule{2-4}
 		& Lucas & Éri & Marvin\\
 		\midrule
 		Mutliclient & X\\
@@ -104,14 +105,14 @@
 		\midrule
 		Help & & X &X\\
 		\midrule
-		Intégrité des données & & X\\
+		Protection des données & & X\\
 		\bottomrule
 	\end{tabular}
 	\caption{Tâche effecutée par étudiant}
 	\label{table:repartition}
 	% \vspace{-1.5cm}
 \end{wraptable}
-La 2\textsuperscript{ème} version de la messagerie consistait à avoir une gestion multiclient. Il fallait pouvoir gérer la connexion/deconnexion de chaque client indépendamment des autres clients. Comme il y avait plusieurs clients, on a dû créer des variables globales qu'il a fallu protéger via des \textit{mutex} et \textit{sémaphores}. Une fonctionnalité de message privée entre 2 utilisateurs a également été mise en place (voir \ul{Table.~\ref{table:repartition}} \& \ul{Fig.~\ref{fig:gantt}}). Celle fois-ci, l'ensemble des fonctionnalité a été développé en asynchrone.
+La 2\textsuperscript{ème} version de la messagerie consistait à avoir une gestion multiclient. Il fallait pouvoir gérer la connexion/deconnexion de chaque client indépendamment des autres clients. Comme il y avait plusieurs clients, on a dû créer des variables globales qu'il a fallu protéger via des \textit{mutex} et \textit{sémaphores}. Une fonctionnalité de message privée entre 2 utilisateurs a également été mise en place (voir \ul{Table.~\ref{table:repartition}} \& \ul{Fig.~\ref{fig:gantt}}). Cette fois-ci, l'ensemble des fonctionnalités a été développé en asynchrone.
 
 \begin{figure}[h]
 	\centering
@@ -134,7 +135,7 @@ Pour lancer la messagerie, il faut commencer par compiler et lancer le serveur
 	\end{lstlisting}
 \end{figure}
 
-\noindent On peut alors lancer les clients (actuellement il en faut 2 avant qu'un échange puisse avoir lieu)
+\noindent On peut alors lancer les clients
 \begin{figure}[h]
 	\centering
 	\vspace{-0.2cm}
@@ -144,5 +145,8 @@ Pour lancer la messagerie, il faut commencer par compiler et lancer le serveur
 	\end{lstlisting}
 \end{figure}
 \section{Difficultés}
-Les difficultés rencontrées ont principalement été d'ordre technique. En parler entre nous ou avec les autres nous a permis de résoudre les problèmes.
+\begin{itemize}
+	\item Changement des structures de données pour les rendre plus facile d'utilisation \& de compréhension
+	\item Fin des threads résolus via un \textit{exit(0)} lorsqu'un \textit{receive()} recevait une chaîne particulière
+\end{itemize}
 \end{document}
