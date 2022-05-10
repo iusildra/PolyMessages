@@ -5,6 +5,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <dirent.h>
 #include "commandes.h"
 
 // Parameters needed to send/receive a message
@@ -71,13 +72,16 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
       exit(1);
     }
 
-    // FINIR L'ENVOI AUX 2 UTILISATEURS AVEC clients[]
-
     free(fullMsg);
   }
   return 0;
 }
 
+/**
+ * @brief Helping command, print the manual to the user
+ *
+ * @return void*
+ */
 void *help(struct userTuple* socket)
 {
   FILE *file;
@@ -139,6 +143,26 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
     help(sockets[position]);
   }
 
+  // redirection vers la commande de réception de fichier
+  if (strcmp(listeMot[0], "/rcvFile\n") == 0)
+  {
+    recognized = 1;
+    if (motMsg == NULL)
+    {
+      return NULL;
+    }
+    motMsg = strtok(NULL, "\0");
+    strcpy(listeMot[1], motMsg);
+    rcvFile(sockets[position], listeMot[1]);
+  }
+
+  // redirection vers la commande listant les fichiers présents sur le serveur
+  if (strcmp(listeMot[0], "/File\n") == 0)
+  {
+    recognized = 1;
+    ListeFichier(sockets[position]);
+  }
+
   if (recognized == 0){
     char* nopMsg = "This command is not recognized\n";
     size_t nopSize = 31;
@@ -153,4 +177,34 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
       exit(1);
     }
   }
+}
+
+
+void *ListeFichier(struct userTuple** sockets){
+  // inspiré d'un code trouvé sur internet
+
+  /* à modifier pour que ce soit envoyé au client et pour que ça récupère dans le dossier sur le serveur */
+  struct dirent *dir;
+  // opendir() renvoie un pointeur de type DIR. 
+  DIR *d = opendir("."); 
+  char msg[1000];
+  if (d)
+  {
+    while ((dir = readdir(d)) != NULL)
+    {
+      strcat(msg, dir->d_name);
+      strcat(msg, "\n");
+    }
+    closedir(d);
+  }
+    if (send(sockets[position]->socket, msg, nopSize, 0) == -1)
+  {
+    perror("error sendto server msg");
+    exit(1);
+  }
+  return 0;
+}
+
+void *rcvFile (struct userTuple** sockets, char* Filename){
+
 }
