@@ -9,20 +9,8 @@
 #include <sys/socket.h>
 #include "serveur.h"
 #include "commandes.h"
-#define MAX_NB_CLIENTS 10
 
-// Parameters needed to send/receive a message
-struct parametres_struct
-{
-  int dS;
-  socklen_t lg;
-  int nbClients;
-  struct userTuple *socks[MAX_NB_CLIENTS];
-  struct sockaddr_in aC;
-};
-struct parametres_struct connection;
-sem_t nbPlaces;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 void sendDisconnection(struct userTuple *user)
 {

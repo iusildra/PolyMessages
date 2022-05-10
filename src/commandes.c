@@ -103,6 +103,28 @@ void *help(struct userTuple* socket)
   fclose(file);
 }
 
+void *receiveFile(struct userTuple* socket, char* filename)
+{
+  FILE *file;
+  file = fopen(filename, "w");
+  char Buffer[128];
+  size_t sizeBuff = 128;
+  while (fgets(Buffer, 128, file)){
+    if (recv(socket->socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (recv(socket->socket, Buffer, sizeBuff, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+    fprintf(file,"%s",Buffer);
+  }
+  fclose(file);
+}
+
 /**
  * @brief Launch command execution
  *
@@ -161,6 +183,11 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
   {
     recognized = 1;
     ListeFichier(sockets[position]);
+    
+  if (strcmp(listeMot[0], "/send") == 0)
+  {
+    recognized = 1;
+    receiveFile(sockets[position], listeMot[1]);
   }
 
   if (recognized == 0){

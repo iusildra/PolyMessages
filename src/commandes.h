@@ -13,12 +13,24 @@ struct userTuple
  * @return void*
  */
 int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *user, char *dest, char *msg);
+
 /**
  * @brief Man page : list every commands available
- *
+ * 
+ * @param socket infos of the client to send the man page
  * @return void*
  */
-void *help();
+void *help(struct userTuple* socket);
+
+/**
+ * @brief Receive a message from a client and store it where the server program is
+ * 
+ * @param socket infos of the client that send the file
+ * @param filename name of the file that the client send to the server
+ * @return void*
+ */
+void *receiveFile(struct userTuple* socket, char* filename);
+
 /**
  * @brief Dispatch the requested command to the right function
  *
