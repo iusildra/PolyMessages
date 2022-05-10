@@ -11,14 +11,6 @@
 
 int NB_THREADS = 2;
 
-struct values
-{
-  int socket;
-  struct sockaddr_in sockaddr;
-  socklen_t socklen;
-  char *username;
-} values;
-
 /**
  * @brief Allows a client to send a message
  *
@@ -76,7 +68,6 @@ void *receiveMsg(void *params)
   struct values *parameters = (struct values *)params;
   do
   {
-
     size_t size;
     if (recv(parameters->socket, &size, sizeof(size_t), 0) == -1)
     {
@@ -102,10 +93,35 @@ void *receiveMsg(void *params)
   pthread_exit(0);
 }
 
+void *sendFile(void *val)
+{
+  struct FilesInfos *param = (struct FilesInfos *)val;
+  do
+  {
+    FILE *file;
+    file = fopen(param->filename, "r");
+    char Buffer[128];
+    size_t sizeBuff = 128;
+    while (fgets(Buffer, 128, file)){
+    if (send(param->val->socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(param->val->socket, Buffer, sizeBuff, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+  }
+  fclose(file);
+  } while (1);
+}
+
 /**
  * @brief Allows a client to send it's username on login
  *
- * @param params
+ * @param params informations about the socket
  * @return void*
  */
 void sendUsername(struct values *params)
