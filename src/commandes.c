@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "commandes.h"
+#define PATH "../ServerFiles/"
 
 // Parameters needed to send/receive a message
 /**
@@ -126,6 +127,53 @@ void *receiveFile(struct userTuple* socket, char* filename)
 }
 
 /**
+ * @brief command listing file on the server
+ *
+ * @return void*
+ */
+void *ListeFichier(struct userTuple** sockets){
+  // inspiré d'un code trouvé sur internet
+
+  /* à modifier pour que ça récupère dans le dossier sur le serveur */
+  
+  struct dirent *dir;
+  // opendir() renvoie un pointeur de type DIR. 
+  DIR *d = opendir(PATH); //chemin pour accéder au dossier
+  char* msg;
+  if (d)
+  {
+    while ((dir = readdir(d)) != NULL)
+    {
+      strcat(msg, dir->d_name);
+      strcat(msg, "\n");
+    }
+    closedir(d);
+  }
+  size_t msgSize = sizeof(char) * (strlen(msg) + 1);
+  if (send(sockets[position]->socket, &msgSize, sizeof(size_t), 0) == -1)
+  {
+    perror("error sendto server size");
+    exit(1);
+  }
+  if (send(sockets[position]->socket, msg, msgSize, 0) == -1)
+  {
+    perror("error sendto server msg");
+    exit(1);
+  }
+  return 0;
+}
+
+/**
+ * @brief command sending a file from the server to a user
+ *
+ * @param Filename file name
+ * @return void*
+ */
+void *rcvFile (struct userTuple** sockets, char* Filename){
+
+}
+
+/**
  * @brief Launch command execution
  *
  * @param msg the message to send
@@ -179,7 +227,7 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
   }
 
   // redirection vers la commande listant les fichiers présents sur le serveur
-  if (strcmp(listeMot[0], "/File\n") == 0)
+  if (strcmp(listeMot[0], "/Files\n") == 0)
   {
     recognized = 1;
     ListeFichier(sockets[position]);
@@ -206,32 +254,3 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
   }
 }
 
-
-void *ListeFichier(struct userTuple** sockets){
-  // inspiré d'un code trouvé sur internet
-
-  /* à modifier pour que ce soit envoyé au client et pour que ça récupère dans le dossier sur le serveur */
-  struct dirent *dir;
-  // opendir() renvoie un pointeur de type DIR. 
-  DIR *d = opendir("."); 
-  char msg[1000];
-  if (d)
-  {
-    while ((dir = readdir(d)) != NULL)
-    {
-      strcat(msg, dir->d_name);
-      strcat(msg, "\n");
-    }
-    closedir(d);
-  }
-    if (send(sockets[position]->socket, msg, nopSize, 0) == -1)
-  {
-    perror("error sendto server msg");
-    exit(1);
-  }
-  return 0;
-}
-
-void *rcvFile (struct userTuple** sockets, char* Filename){
-
-}
