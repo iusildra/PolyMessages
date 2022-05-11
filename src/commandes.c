@@ -169,7 +169,7 @@ void *ListeFichier(struct userTuple** sockets){
  * @param Filename file name
  * @return void*
  */
-void *rcvFile (struct userTuple** sockets, char* Filename){
+void *sendFile (struct userTuple** sockets, char* Filename){
 
 }
 
@@ -232,24 +232,25 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
     recognized = 1;
     ListeFichier(sockets[position]);
     
-  if (strcmp(listeMot[0], "/send") == 0)
-  {
-    recognized = 1;
-    receiveFile(sockets[position], listeMot[1]);
-  }
-
-  if (recognized == 0){
-    char* nopMsg = "This command is not recognized\n";
-    size_t nopSize = 31;
-    if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
+    if (strcmp(listeMot[0], "/send") == 0)
     {
-      perror("error sendto server size");
-      exit(1);
+      recognized = 1;
+      receiveFile(sockets[position], listeMot[1]);
     }
-    if (send(sockets[position]->socket, nopMsg, nopSize, 0) == -1)
-    {
-      perror("error sendto server msg");
-      exit(1);
+
+    if (recognized == 0){
+      char* nopMsg = "This command is not recognized\n";
+      size_t nopSize = 31;
+      if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
+      {
+        perror("error sendto server size");
+        exit(1);
+      }
+      if (send(sockets[position]->socket, nopMsg, nopSize, 0) == -1)
+      {
+        perror("error sendto server msg");
+        exit(1);
+      }
     }
   }
 }
