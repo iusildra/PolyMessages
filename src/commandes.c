@@ -8,7 +8,6 @@
 #include <dirent.h>
 #include "commandes.h"
 
-// Parameters needed to send/receive a message
 /**
  * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
  *
@@ -78,9 +77,10 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
 }
 
 /**
- * @brief Helping command, print the manual to the user
- *
- * @return void*
+ * @brief Print the manuel page of every commands
+ * 
+ * @param socket the user who requested the man page
+ * @return void* 
  */
 void *help(struct userTuple* socket)
 {
@@ -233,5 +233,5 @@ void *ListeFichier(struct userTuple** sockets){
 }
 
 void *rcvFile (struct userTuple** sockets, char* Filename){
-
+  
 }
