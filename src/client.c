@@ -17,7 +17,7 @@ int NB_THREADS = 2;
  * @param msg the messag writtent
  * @return int 0 if there was no commands, 1 otherwise
  */
-int detectCommands(char* msg, int socket) {
+int detectCommands(char* msg, char* ip ,char* port) {
   int recognized = 0;
   if (strcmp(msg, "/send\n") == 0)
   {
@@ -27,7 +27,33 @@ int detectCommands(char* msg, int socket) {
     if (pid != 0)
     {
       //Open a new socket
-      sendFile(path, socket);
+      int dSF = socket(PF_INET, SOCK_STREAM, 0);
+      if (dSF == -1)
+      {
+        perror("NO CONNECTION TO SERVER");
+        exit(1);
+      }
+
+      struct sockaddr_in aSF;
+      aSF.sin_family = AF_INET;
+      inet_pton(AF_INET, ip, &(aSF.sin_addr));
+      aSF.sin_port = htons(atoi(port));
+      socklen_t lgAF = sizeof(struct sockaddr_in);
+      if (connect(dSF, (struct sockaddr *)&aSF, lgAF) == -1)
+      {
+        perror("error connect server");
+        exit(1);
+      }
+
+      sendFile(path, dSF);
+
+      if (close(dSF) == -1)
+      {
+        perror("Erreur shutdown");
+        exit(1);
+      };
+
+      printf("Fichier Envoyé\n");
     }
   }
 
@@ -62,7 +88,7 @@ void *sendMsg(void *val)
     size = strlen(msg) + 1;
     if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
 
-    if (detectCommands(msg, param->socket) == 1) {
+    if (detectCommands(msg, param->ip, param->port) == 1) {
       free(msg);
       continue;
     }
@@ -212,6 +238,7 @@ int main(int argc, char *argv[])
   }
   printf("Socket Créé\n");
 
+  
   struct sockaddr_in aS;
   aS.sin_family = AF_INET;
   inet_pton(AF_INET, argv[1], &(aS.sin_addr));
@@ -228,6 +255,8 @@ int main(int argc, char *argv[])
 
   // Values to pass to the sendThread
   values.socket = dS;
+  values.ip = argv[1];
+  values.port = argv[2];
   values.sockaddr = aS;
   values.socklen = lgA;
 

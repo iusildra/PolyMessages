@@ -1,6 +1,8 @@
 struct values
 {
   int socket;
+  char* ip;
+  char* port;
   struct sockaddr_in sockaddr;
   socklen_t socklen;
   char *username;
