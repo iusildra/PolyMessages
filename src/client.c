@@ -6,10 +6,40 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-// #include "commandes.c"
+#include "clientCommands.h"
 #include "client.h"
 
 int NB_THREADS = 2;
+
+/**
+ * @brief Detect if the user entered a client side command
+ * 
+ * @param msg the messag writtent
+ * @return int 0 if there was no commands, 1 otherwise
+ */
+int detectCommands(char* msg, int socket) {
+  int recognized = 0;
+  if (strcmp(msg, "/send\n") == 0)
+  {
+    recognized = 1;
+    char *path = listFiles();
+    int pid = fork();
+    if (pid != 0)
+    {
+      //Open a new socket
+      sendFile(path, socket);
+    }
+  }
+
+  if (strcmp(msg, "/recv\n") == 0) {
+    recognized = 1;
+    //To complete
+  }
+  if (recognized != 0)
+    return 1;
+  else
+    return 0;
+}
 
 /**
  * @brief Allows a client to send a message
@@ -31,6 +61,11 @@ void *sendMsg(void *val)
     fgets(msg, maxSize, stdin);
     size = strlen(msg) + 1;
     if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
+
+    if (detectCommands(msg, param->socket) == 1) {
+      free(msg);
+      continue;
+    }
 
     // Send the size of the message
     if (send(param->socket, &size, sizeof(size_t), 0) == -1)
@@ -91,31 +126,6 @@ void *receiveMsg(void *params)
     free(msg);
   } while (1);
   pthread_exit(0);
-}
-
-void *sendFile(void *val)
-{
-  struct FilesInfos *param = (struct FilesInfos *)val;
-  do
-  {
-    FILE *file;
-    file = fopen(param->filename, "r");
-    char Buffer[128];
-    size_t sizeBuff = 128;
-    while (fgets(Buffer, 128, file)){
-    if (send(param->val->socket, &sizeBuff, sizeof(size_t), 0) == -1)
-    {
-      perror("error sendto server size");
-      exit(1);
-    }
-    if (send(param->val->socket, Buffer, sizeBuff, 0) == -1)
-    {
-      perror("error sendto server msg");
-      exit(1);
-    }
-  }
-  fclose(file);
-  } while (1);
 }
 
 /**

@@ -6,12 +6,6 @@ struct values
   char *username;
 } values;
 
-struct FilesInfos
-{
-  struct values *val;
-  char *filename;
-} FilesInfos;
-
 /**
  * @brief Allows a client to send a message
  *
@@ -25,13 +19,6 @@ void *sendMsg(void *val);
  * @param params informations about the socket
  */
 void *receiveMsg(void *params);
-
-/**
- * @brief Allows a client to send a file to the server
- *
- * @param val informations the file: name and the socket that send it
- */
-void *sendFile(void *val);
 
 /**
  * @brief Allows a client to send it's username on login
