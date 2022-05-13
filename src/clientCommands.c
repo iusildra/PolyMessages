@@ -7,27 +7,56 @@
 #define PATH "../files/"
 
 /**
- * @brief Send a file
+ * @brief Send a file to the server
  * 
  * @param path path of the file to send
  * @return int 0 if success, -1 otherwise
  */
-int sendFile(char *path, int socket) {
+int sendFile(char *path, char* name, int socket) {
   FILE *file;
+  printf("file path : %s", path);
   file = fopen(path, "r");
   char Buffer[128];
   size_t sizeBuff = 128;
+  if (send(socket, "@send", sizeof(char) * 6, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  size_t size = sizeof(char) * (strlen(name) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, name, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
   while (fgets(Buffer, 128, file)){
-  if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto client size");
+      exit(1);
+    }
+    if (send(socket, Buffer, sizeBuff, 0) == -1)
+    {
+      perror("error sendto client msg");
+      exit(1);
+    }
+  }
+  char *end = "@end";
+  size = sizeof(char) * (strlen(end) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
-    perror("error sendto server size");
+    perror("error send client");
     exit(1);
   }
-  if (send(socket, Buffer, sizeBuff, 0) == -1)
+  if (send(socket, end, size, 0) == -1)
   {
-    perror("error sendto server msg");
+    perror("error send client");
     exit(1);
-  }
   }
   fclose(file);
 }
@@ -74,13 +103,16 @@ char* listFiles() {
     {
       if (strcmp(dir->d_name, ".") == 0) continue;
       if (strcmp(dir->d_name, "..") == 0) continue;
-      files[i - 1] = malloc(sizeof(char)*(strlen(PATH) + strlen(dir->d_name)+1));
-      strcpy(files[i - 1], PATH);
-      strcat(files[i - 1], dir->d_name);
+      files[i - 1] = malloc(sizeof(char)*(strlen(dir->d_name)+1));
+      strcpy(files[i - 1], dir->d_name);
       printf("%d\t%s\n", i, files[i - 1]);
       i++;
     }
     closedir(d);
-    return chooseFile(files, i - 1);
+    char* name = chooseFile(files, i - 1);
+    char* nameToSend = (char*)malloc(sizeof(char) * (strlen(name) + 1));
+    strcpy(nameToSend, name);
+    free(files);
+    return nameToSend;
   }
 }

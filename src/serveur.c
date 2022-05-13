@@ -10,7 +10,13 @@
 #include "serveur.h"
 #include "commandes.h"
 
-
+struct params
+{
+  pthread_t threads[MAX_NB_CLIENTS];
+  int filesSocket[MAX_NB_CLIENTS];
+  pthread_mutex_t mutex;
+  int nbFileClient;
+} fileParams;
 
 void sendDisconnection(struct userTuple *user)
 {
@@ -209,7 +215,22 @@ void *clientManagement(void *params)
 int getIndex()
 {
   int i = 0;
-  while (i < connection.nbClients && connection.socks[i] != NULL)
+  while (i < MAX_NB_CLIENTS && connection.socks[i] != NULL)
+  {
+    i++;
+  }
+  return i;
+}
+
+/**
+ * @brief Get the File Index object
+ *
+ * @return int
+ */
+int getFileIndex()
+{
+  int i = 0;
+  while (i < MAX_NB_CLIENTS && fileParams.filesSocket[i] != -1)
   {
     i++;
   }
@@ -235,9 +256,10 @@ void *userLogin()
     int *position = malloc(sizeof(int));
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
+    printf("user socket : %d", user->socket);
     int i = getIndex();
     *position = i;
-    //when a client connect and doesn't enter a username, if an another client connect, the server has a segmentation fault
+    // when a client connect and doesn't enter a username, if an another client connect, the server has a segmentation fault
     pthread_mutex_lock(&mutex);
     connection.socks[i] = user;
     pthread_mutex_unlock(&mutex);
@@ -250,6 +272,84 @@ void *userLogin()
     if (i == connection.nbClients)
     { // Used to make sure the received message is transmitted to every client. If nbClient was decreased when a client deconnect, the last clients wouldn't receive the message.
       connection.nbClients++;
+    }
+  } while (1);
+}
+
+/**
+ * @brief
+ *
+ * @param params
+ * @return void*
+ */
+void *fileManagement(void *params)
+{
+  int *pos = (int *)params;
+  char *command = malloc(sizeof(char) * 6);
+  printf("file socket : %d", fileParams.filesSocket[*pos]);
+  if (recv(fileParams.filesSocket[*pos], command, sizeof(char) * 6, 0) == -1)
+  {
+    perror("error recv file server");
+    exit(1);
+  }
+
+  if (strcmp(command, "@send") == 0)
+  {
+    size_t size;
+    if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
+    {
+      perror("error recv file server");
+      exit(1);
+    }
+    char *name = malloc(size);
+    if (recv(fileParams.filesSocket[*pos], name, size, 0) == -1)
+    {
+      perror("error recv file server");
+      exit(1);
+    }
+
+    recvFile(fileParams.filesSocket[*pos], name);
+  } else if (strcmp(command, "@recv") == 0) {
+    //TODO
+  }
+  pthread_exit(0);
+}
+
+/**
+ * @brief Manage client's requests for files
+ *
+ * @param dS Dedicated socket
+ * @param acFiles sockaddr
+ * @return void*
+ */
+void *fileClientLogin(int dS, struct sockaddr_in acFiles)
+{
+  for (int k = 0; k < MAX_NB_CLIENTS; k++)
+  {
+    fileParams.filesSocket[k] = -1;
+  }
+  socklen_t lg = sizeof(struct sockaddr_in);
+  fileParams.nbFileClient = 0;
+  do
+  {
+    int *pos = malloc(sizeof(int));
+    int i = getFileIndex();
+    printf("Index = %d\n", i);
+    // pthread_mutex_lock(&mutex);
+    fileParams.filesSocket[i] = accept(dS, (struct sockaddr *)&acFiles, &lg);
+    *pos = i;
+    // pthread_mutex_unlock(&mutex);
+    printf("ici");
+
+    if (pthread_create(&fileParams.threads[i], NULL, fileManagement, (void *)pos) == -1)
+    {
+      perror("error fileManagement server");
+      exit(1);
+    }
+
+    if (i == fileParams.nbFileClient)
+    {
+      fileParams.nbFileClient++;
     }
   } while (1);
 }
@@ -314,26 +414,60 @@ int main(int argc, char *argv[])
     perror("error listen server");
     exit(1);
   }
-  printf("Mode écoute client\n");
+  printf("Écoute client\n");
+
   struct sockaddr_in aC;
   connection.aC = aC;
   connection.lg = sizeof(struct sockaddr_in);
 
-  signal(SIGINT, terminateEveryClient);
+  int pid = fork();
 
-  userLogin(&nbPlaces);
-
-  if (sem_destroy(&nbPlaces))
+  if (pid == 0)
   {
-    perror("sem destroy");
-    exit(1);
+    signal(SIGINT, terminateEveryClient);
+    userLogin(&nbPlaces);
+
+    if (sem_destroy(&nbPlaces))
+    {
+      perror("sem destroy");
+      exit(1);
+    }
+  }
+  else
+  {
+    int dSFiles = socket(PF_INET, SOCK_STREAM, 0);
+    if (dSFiles < 0)
+    {
+      perror("Couldn't connect");
+      exit(1);
+    }
+    if (setsockopt(connection.dS, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+      perror("setsockopt(SO_REUSEADDR) failed");
+
+    printf("Socket fichiers Créé\n");
+
+    struct sockaddr_in ad;
+    ad.sin_family = AF_INET;
+    ad.sin_addr.s_addr = INADDR_ANY;
+    ad.sin_port = htons(atoi(argv[2]));
+    if (bind(dSFiles, (struct sockaddr *)&ad, sizeof(ad)) == -1)
+    {
+      perror("error bind server");
+      exit(1);
+    };
+    printf("Socket Nommé\n");
+
+    if (listen(dSFiles, 7) == -1)
+    {
+      perror("error listen server");
+      exit(1);
+    }
+    printf("Écoute fichiers\n");
+
+    struct sockaddr_in aCFiles;
+    fileClientLogin(dSFiles, aCFiles);
   }
 
-  // shutdown(dS2C, 2);
-  // shutdown(dSC, 2);
-  // shutdown(dS, 2);
-  printf("Fin du programme");
+  printf("\nFin du programme\n");
   return 0;
 }
-
-// TODO : parametrize C1versC2 to make it more flexible and use 1 function for every client

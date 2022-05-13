@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "commandes.h"
-#define PATH "../ServerFiles/"
+#define PATH "../serverFiles/"
 
 /**
  * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
@@ -17,7 +17,7 @@
  * @param msg message to send
  * @return void*
  */
-int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *user, char *dest, char *msg)
+int messagePrive(struct userTuple **sockets, int nbClient, struct userTuple *user, char *dest, char *msg)
 {
 
   // faire la recherche de l'identifiant de l'utilisateur dans la future collection
@@ -83,19 +83,19 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
  * @param socket the user who requested the man page
  * @return void* 
  */
-void *help(struct userTuple* socket)
+void *help(int socket)
 {
   FILE *file;
   file = fopen("manuelFonct.txt", "r");
   char Buffer[128];
   size_t sizeBuff = 128;
   while (fgets(Buffer, 128, file)){
-    if (send(socket->socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
       perror("error sendto server size");
       exit(1);
     }
-    if (send(socket->socket, Buffer, sizeBuff, 0) == -1)
+    if (send(socket, Buffer, sizeBuff, 0) == -1)
     {
       perror("error sendto server msg");
       exit(1);
@@ -104,24 +104,31 @@ void *help(struct userTuple* socket)
   fclose(file);
 }
 
-void *receiveFile(struct userTuple* socket, char* filename)
+void *recvFile(int socket, char *filename)
 {
   FILE *file;
-  file = fopen(filename, "w");
+  char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
+  strcpy(filepath, PATH);
+  strcat(filepath, filename);
+  file = fopen(filepath, "w");
   char Buffer[128];
   size_t sizeBuff = 128;
-  while (fgets(Buffer, 128, file)){
-    if (recv(socket->socket, &sizeBuff, sizeof(size_t), 0) == -1)
+  int end = 0;
+  while (end == 0)
+  {
+    if (recv(socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
       perror("error sendto server size");
       exit(1);
     }
-    if (recv(socket->socket, Buffer, sizeBuff, 0) == -1)
+    if (recv(socket, Buffer, sizeBuff, 0) == -1)
     {
       perror("error sendto server msg");
       exit(1);
     }
-    fprintf(file,"%s",Buffer);
+    if (strcmp(Buffer, "@end") == 0)
+      break;
+    fprintf(file, "%s", Buffer);
   }
   fclose(file);
 }
@@ -131,15 +138,16 @@ void *receiveFile(struct userTuple* socket, char* filename)
  *
  * @return void*
  */
-void *ListeFichier(struct userTuple** sockets){
+void *ListeFichier(int socket)
+{
   // inspiré d'un code trouvé sur internet
 
   /* à modifier pour que ça récupère dans le dossier sur le serveur */
-  
+
   struct dirent *dir;
-  // opendir() renvoie un pointeur de type DIR. 
-  DIR *d = opendir(PATH); //chemin pour accéder au dossier
-  char* msg;
+  // opendir() renvoie un pointeur de type DIR.
+  DIR *d = opendir(PATH); // chemin pour accéder au dossier
+  char *msg;
   if (d)
   {
     while ((dir = readdir(d)) != NULL)
@@ -150,12 +158,12 @@ void *ListeFichier(struct userTuple** sockets){
     closedir(d);
   }
   size_t msgSize = sizeof(char) * (strlen(msg) + 1);
-  if (send(sockets[position]->socket, &msgSize, sizeof(size_t), 0) == -1)
+  if (send(socket, &msgSize, sizeof(size_t), 0) == -1)
   {
     perror("error sendto server size");
     exit(1);
   }
-  if (send(sockets[position]->socket, msg, msgSize, 0) == -1)
+  if (send(socket, msg, msgSize, 0) == -1)
   {
     perror("error sendto server msg");
     exit(1);
@@ -169,8 +177,42 @@ void *ListeFichier(struct userTuple** sockets){
  * @param Filename file name
  * @return void*
  */
-void *sendFile (struct userTuple** sockets, char* Filename){
+void *sendFile(int socket, char *filename)
+{
+  void* buffer;
+  FILE *file;
+  char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
+  strcpy(filepath, PATH);
+  strcat(filepath, filename);
+  file = popen(filepath, "r");
+  size_t sizeBuffer = 128;
 
+  while (fgets(buffer, 128, file)){
+    if (send(socket, &sizeBuffer, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(socket, buffer, sizeBuffer, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+  }
+  fclose(file);
+
+  char *end = "@end";
+  size_t size = sizeof(char) * (strlen(end) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, end, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
 }
 
 /**
@@ -181,7 +223,7 @@ void *sendFile (struct userTuple** sockets, char* Filename){
  * @param nbClient number of clients
  * @return void*
  */
-void *executer(struct userTuple** sockets, int nbClient, char *msg, int position)
+void *executer(struct userTuple **sockets, int nbClient, char *msg, int position)
 {
   // séparation et récupération de chaque élément de la commande
 
@@ -210,7 +252,7 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
   if (strcmp(listeMot[0], "/help\n") == 0)
   {
     recognized = 1;
-    help(sockets[position]);
+    help(sockets[position]->socket);
   }
 
   // redirection vers la commande de réception de fichier
@@ -223,19 +265,30 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
     }
     motMsg = strtok(NULL, "\0");
     strcpy(listeMot[1], motMsg);
-    rcvFile(sockets[position], listeMot[1]);
+    recvFile(sockets[position]->socket, listeMot[1]);
   }
 
   // redirection vers la commande listant les fichiers présents sur le serveur
   if (strcmp(listeMot[0], "/Files\n") == 0)
   {
     recognized = 1;
-    ListeFichier(sockets[position]);
-    
-    if (strcmp(listeMot[0], "/send") == 0)
+    ListeFichier(sockets[position]->socket);
+  }
+
+  if (strcmp(listeMot[0], "@send") == 0)
+  {
+    recognized = 1;
+    recvFile(sockets[position]->socket, listeMot[1]);
+  }
+
+  if (recognized == 0)
+  {
+    char *nopMsg = "This command is not recognized\n";
+    size_t nopSize = 31;
+    if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
     {
       recognized = 1;
-      receiveFile(sockets[position], listeMot[1]);
+      recvFile(sockets[position]->socket, listeMot[1]);
     }
 
     if (recognized == 0){
@@ -254,4 +307,3 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
     }
   }
 }
-

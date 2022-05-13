@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include "clientCommands.h"
 #include "client.h"
-
+#define PATH "../files/"
 int NB_THREADS = 2;
 
 /**
@@ -17,49 +17,30 @@ int NB_THREADS = 2;
  * @param msg the messag writtent
  * @return int 0 if there was no commands, 1 otherwise
  */
-int detectCommands(char* msg, char* ip ,char* port) {
+int detectClientCommands(char* msg, int socket) {
   int recognized = 0;
   if (strcmp(msg, "/send\n") == 0)
   {
     recognized = 1;
-    char *path = listFiles();
+    char *name = listFiles();
+    char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
+    strcpy(path, PATH);
+    strcat(path, name);
+    printf("%s\n", path);
     int pid = fork();
     if (pid != 0)
     {
       //Open a new socket
-      int dSF = socket(PF_INET, SOCK_STREAM, 0);
-      if (dSF == -1)
-      {
-        perror("NO CONNECTION TO SERVER");
-        exit(1);
-      }
-
-      struct sockaddr_in aSF;
-      aSF.sin_family = AF_INET;
-      inet_pton(AF_INET, ip, &(aSF.sin_addr));
-      aSF.sin_port = htons(atoi(port));
-      socklen_t lgAF = sizeof(struct sockaddr_in);
-      if (connect(dSF, (struct sockaddr *)&aSF, lgAF) == -1)
-      {
-        perror("error connect server");
-        exit(1);
-      }
-
-      sendFile(path, dSF);
-
-      if (close(dSF) == -1)
-      {
-        perror("Erreur shutdown");
-        exit(1);
-      };
-
-      printf("Fichier Envoyé\n");
+      sendFile(path, name, socket);
     }
   }
 
   if (strcmp(msg, "/recv\n") == 0) {
     recognized = 1;
-    //To complete
+    int pid = fork();
+    if (pid == 0) {
+      // recvFile(socket);
+    }
   }
   if (recognized != 0)
     return 1;
@@ -88,7 +69,7 @@ void *sendMsg(void *val)
     size = strlen(msg) + 1;
     if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
 
-    if (detectCommands(msg, param->ip, param->port) == 1) {
+    if (detectClientCommands(msg, param->fileSocket) == 1) {
       free(msg);
       continue;
     }
@@ -237,6 +218,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
   printf("Socket Créé\n");
+  int dSFile = socket(PF_INET, SOCK_STREAM, 0);
+  if (dSFile == -1)
+  {
+    perror("NO CONNECTION TO SERVER");
+    exit(1);
+  }
+  printf("Socket Créé\n");
 
   
   struct sockaddr_in aS;
@@ -245,6 +233,17 @@ int main(int argc, char *argv[])
   aS.sin_port = htons(atoi(argv[2]));
   socklen_t lgA = sizeof(struct sockaddr_in);
   if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
+  {
+    perror("error connect server");
+    exit(1);
+  }
+
+  struct sockaddr_in aSFile;
+  aSFile.sin_family = AF_INET;
+  inet_pton(AF_INET, argv[1], &(aSFile.sin_addr));
+  aSFile.sin_port = htons(atoi(argv[3]));
+  socklen_t lgAFile = sizeof(struct sockaddr_in);
+  if (connect(dSFile, (struct sockaddr *)&aSFile, lgAFile) == -1)
   {
     perror("error connect server");
     exit(1);
@@ -259,6 +258,7 @@ int main(int argc, char *argv[])
   values.port = argv[2];
   values.sockaddr = aS;
   values.socklen = lgA;
+  values.fileSocket = dSFile;
 
   sendUsername(&values);
 

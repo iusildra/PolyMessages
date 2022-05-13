@@ -2,9 +2,19 @@
  * @brief Send a file
  * 
  * @param path path of the file to send
+ * @param name name of the file to send
+ * @param socket socket to the file server
  * @return int 0 if success, -1 otherwise
  */
-int sendFile(char* path, int socket);
+int sendFile(char* path, char* name, int socket);
+
+/**
+ * @brief Ask for a file
+ * 
+ * @param socket socket to the file server
+ * @return int 0 if success, -1 otherwise
+ */
+int recvFile(int socket);
 
 
 /**

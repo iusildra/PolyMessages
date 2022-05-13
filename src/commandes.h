@@ -20,7 +20,7 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
  * @param socket infos of the client to send the man page
  * @return void*
  */
-void *help(struct userTuple* socket);
+void *help(int socket);
 
 /**
  * @brief Receive a message from a client and store it where the server program is
@@ -29,7 +29,7 @@ void *help(struct userTuple* socket);
  * @param filename name of the file that the client send to the server
  * @return void*
  */
-void *receiveFile(struct userTuple* socket, char* filename);
+void *recvFile(int socket, char* filename);
 
 /**
  * @brief Dispatch the requested command to the right function
