@@ -147,13 +147,15 @@ void *ListeFichier(int socket)
   struct dirent *dir;
   // opendir() renvoie un pointeur de type DIR.
   DIR *d = opendir(PATH); // chemin pour accéder au dossier
-  char *msg;
+  char *msg = (char*)malloc(100);
   if (d)
   {
     while ((dir = readdir(d)) != NULL)
     {
-      strcat(msg, dir->d_name);
-      strcat(msg, "\n");
+      if (dir->d_name[0]!='.'){
+        strcat(msg, dir->d_name);
+        strcat(msg, "\n");
+      }
     }
     closedir(d);
   }
@@ -168,7 +170,6 @@ void *ListeFichier(int socket)
     perror("error sendto server msg");
     exit(1);
   }
-  return 0;
 }
 
 /**
@@ -280,30 +281,19 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     recognized = 1;
     recvFile(sockets[position]->socket, listeMot[1]);
   }
-
-  if (recognized == 0)
-  {
-    char *nopMsg = "This command is not recognized\n";
+  
+  if (recognized == 0){
+    char* nopMsg = "This command is not recognized\n";
     size_t nopSize = 31;
     if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
     {
-      recognized = 1;
-      recvFile(sockets[position]->socket, listeMot[1]);
+      perror("error sendto server size");
+      exit(1);
     }
-
-    if (recognized == 0){
-      char* nopMsg = "This command is not recognized\n";
-      size_t nopSize = 31;
-      if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
-      {
-        perror("error sendto server size");
-        exit(1);
-      }
-      if (send(sockets[position]->socket, nopMsg, nopSize, 0) == -1)
-      {
-        perror("error sendto server msg");
-        exit(1);
-      }
+    if (send(sockets[position]->socket, nopMsg, nopSize, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
     }
   }
 }
