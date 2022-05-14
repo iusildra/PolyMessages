@@ -18,11 +18,13 @@ int sendFile(char *path, char* name, int socket) {
   file = fopen(path, "r");
   char Buffer[128];
   size_t sizeBuff = 128;
+  //send signal for file managemnt
   if (send(socket, "@send", sizeof(char) * 6, 0) == -1)
   {
     perror("error send client");
     exit(1);
   }
+  //send name of the file
   size_t size = sizeof(char) * (strlen(name) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
@@ -34,6 +36,7 @@ int sendFile(char *path, char* name, int socket) {
     perror("error send client");
     exit(1);
   }
+  //send the file lign per lign
   while (fgets(Buffer, 128, file)){
     if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
@@ -46,6 +49,7 @@ int sendFile(char *path, char* name, int socket) {
       exit(1);
     }
   }
+  //send signal of the end of the send file
   char *end = "@end";
   size = sizeof(char) * (strlen(end) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
@@ -57,6 +61,56 @@ int sendFile(char *path, char* name, int socket) {
   {
     perror("error send client");
     exit(1);
+  }
+  fclose(file);
+}
+
+/**
+ * @brief Ask for a file
+ * 
+ * @param socket socket to the file server
+ * @return int 0 if success, -1 otherwise
+ */
+int recvFile(char *path, char* filename, int socket) {
+  if (send(socket, "@recv", sizeof(char) * 6, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  size_t size = sizeof(char) * (strlen(filename) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, filename, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  FILE *file;
+  char *filepath = malloc(sizeof(char) * (strlen(path) + strlen(filename) + 1));
+  strcpy(filepath, path);
+  strcat(filepath, filename);
+  file = fopen(filepath, "w");
+  char Buffer[128];
+  size_t sizeBuff;
+  int end = 0;
+  while (end == 0)
+  {
+    if (recv(socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (recv(socket, Buffer, sizeBuff, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+    if (strcmp(Buffer, "@end") == 0)
+      break;
+    fprintf(file, "%s", Buffer);
   }
   fclose(file);
 }
@@ -114,5 +168,33 @@ char* listFiles() {
     strcpy(nameToSend, name);
     free(files);
     return nameToSend;
+  }
+}
+
+char* listServFiles(int socket) {
+  char *listFiles = "@files";
+  size_t size = sizeof(char) * (strlen(listFiles) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, listFiles, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+
+  size_t sizeName;
+  if (recv(socket, &sizeName, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  char *filename = malloc(sizeof(char) * sizeName);
+  if (recv(socket, listFiles, sizeName, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
   }
 }

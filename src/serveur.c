@@ -286,7 +286,7 @@ void *fileManagement(void *params)
 {
   int *pos = (int *)params;
   char *command = malloc(sizeof(char) * 6);
-  printf("file socket : %d", fileParams.filesSocket[*pos]);
+  printf("file socket : %d\n", fileParams.filesSocket[*pos]);
   if (recv(fileParams.filesSocket[*pos], command, sizeof(char) * 6, 0) == -1)
   {
     perror("error recv file server");
@@ -307,10 +307,53 @@ void *fileManagement(void *params)
       perror("error recv file server");
       exit(1);
     }
-
     recvFile(fileParams.filesSocket[*pos], name);
   } else if (strcmp(command, "@recv") == 0) {
-    //TODO
+    size_t size;
+    if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
+    {
+      perror("error send file server");
+      exit(1);
+    }
+    char *name = malloc(size);
+    if (recv(fileParams.filesSocket[*pos], name, size, 0) == -1)
+    {
+      perror("error send file server");
+      exit(1);
+    }
+    sendFile(fileParams.filesSocket[*pos], name);
+  }  else if (strcmp(command, "@files") == 0) {
+    DIR *d;
+    FILE *fp;
+    struct dirent *dir;
+    d = opendir(PATH);
+    char **files;
+    if (d)
+    {
+      char sizeS[10];
+      fp = popen("ls ../serverFiles | wc -l", "r");
+      while (fgets(sizeS, sizeof(char)*10, fp) != NULL) {}
+      pclose(fp);
+      int size = atoi(sizeS);
+      files = malloc(sizeof(char *) * size);
+      // printf("Select the file you wish to recv :\n"); envoie au client
+      int i = 1;
+      while ((dir = readdir(d)) != NULL)
+      {
+        if (strcmp(dir->d_name, ".") == 0) continue;
+        if (strcmp(dir->d_name, "..") == 0) continue;
+        files[i - 1] = malloc(sizeof(char)*(strlen(dir->d_name)+1));
+        strcpy(files[i - 1], dir->d_name);
+        // printf("%d\t%s\n", i, files[i - 1]); envoie au client
+        i++;
+      }
+      closedir(d);
+      char* name = chooseFile(files, i - 1);
+      char* nameToSend = (char*)malloc(sizeof(char) * (strlen(name) + 1));
+      strcpy(nameToSend, name);
+      free(files);
+      // return nameToSend; envoie au client
+    }
   }
   pthread_exit(0);
 }
@@ -339,7 +382,7 @@ void *fileClientLogin(int dS, struct sockaddr_in acFiles)
     fileParams.filesSocket[i] = accept(dS, (struct sockaddr *)&acFiles, &lg);
     *pos = i;
     // pthread_mutex_unlock(&mutex);
-    printf("ici");
+    printf("ici\n");
 
     if (pthread_create(&fileParams.threads[i], NULL, fileManagement, (void *)pos) == -1)
     {

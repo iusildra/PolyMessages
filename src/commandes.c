@@ -113,8 +113,7 @@ void *recvFile(int socket, char *filename)
   file = fopen(filepath, "w");
   char Buffer[128];
   size_t sizeBuff = 128;
-  int end = 0;
-  while (end == 0)
+  while (1)
   {
     if (recv(socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
@@ -191,12 +190,12 @@ void *sendFile(int socket, char *filename)
   while (fgets(buffer, 128, file)){
     if (send(socket, &sizeBuffer, sizeof(size_t), 0) == -1)
     {
-      perror("error sendto server size");
+      perror("error sendto client size");
       exit(1);
     }
     if (send(socket, buffer, sizeBuffer, 0) == -1)
     {
-      perror("error sendto server msg");
+      perror("error sendto client msg");
       exit(1);
     }
   }
@@ -206,12 +205,12 @@ void *sendFile(int socket, char *filename)
   size_t size = sizeof(char) * (strlen(end) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
-    perror("error send client");
+    perror("error sendto client");
     exit(1);
   }
   if (send(socket, end, size, 0) == -1)
   {
-    perror("error send client");
+    perror("error sendto client");
     exit(1);
   }
 }

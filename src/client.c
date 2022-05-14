@@ -37,9 +37,14 @@ int detectClientCommands(char* msg, int socket) {
 
   if (strcmp(msg, "/recv\n") == 0) {
     recognized = 1;
+    char *name = listServFiles(socket);
+    char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
+    strcpy(path, PATH);
+    strcat(path, name);
+    printf("%s\n", path);
     int pid = fork();
     if (pid == 0) {
-      // recvFile(socket);
+      recvFile(path, name, socket);
     }
   }
   if (recognized != 0)
