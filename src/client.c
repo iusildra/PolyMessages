@@ -209,8 +209,8 @@ void terminateClient(int sig)
  */
 int main(int argc, char *argv[])
 {
-  if (argc != 3) {
-    printf("Nombre d'arguments érroné ! ./client [addresse IP serveur] [port] \n");
+  if (argc != 4) {
+    printf("Nombre d'arguments érroné ! ./client [addresse IP serveur] [port1] [port2] \n");
     exit(1);
   }
 
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     perror("NO CONNECTION TO SERVER");
     exit(1);
   }
-  printf("Socket Créé\n");
+  printf("File Socket Créé\n");
 
   
   struct sockaddr_in aS;
