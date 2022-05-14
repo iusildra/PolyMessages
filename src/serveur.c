@@ -256,7 +256,7 @@ void *userLogin()
     int *position = malloc(sizeof(int));
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
-    printf("user socket : %d", user->socket);
+    printf("user socket : %d\n", user->socket);
     int i = getIndex();
     *position = i;
     // when a client connect and doesn't enter a username, if an another client connect, the server has a segmentation fault
@@ -378,6 +378,11 @@ void terminateEveryClient(int n)
  */
 int main(int argc, char *argv[])
 {
+
+  if (argc != 3) {
+    printf("Nombre d'arguments érroné ! ./serveur [port1] [port2] \n");
+    exit(1);
+  }
 
   printf("Début programme\n");
   if (sem_init(&nbPlaces, 0, MAX_NB_CLIENTS))

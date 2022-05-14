@@ -209,6 +209,11 @@ void terminateClient(int sig)
  */
 int main(int argc, char *argv[])
 {
+  if (argc != 3) {
+    printf("Nombre d'arguments érroné ! ./client [addresse IP serveur] [port] \n");
+    exit(1);
+  }
+
   printf("Début programme\n");
   // Socket initialization
   int dS = socket(PF_INET, SOCK_STREAM, 0);
