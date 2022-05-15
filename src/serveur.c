@@ -256,7 +256,6 @@ void *userLogin()
     int *position = malloc(sizeof(int));
     struct userTuple *user = malloc(sizeof(struct userTuple));
     user->socket = accept(connection.dS, (struct sockaddr *)&connection.aC, &connection.lg);
-    printf("user socket : %d\n", user->socket);
     int i = getIndex();
     *position = i;
     // when a client connect and doesn't enter a username, if an another client connect, the server has a segmentation fault
@@ -323,37 +322,8 @@ void *fileManagement(void *params)
     }
     sendFile(fileParams.filesSocket[*pos], name);
   }  else if (strcmp(command, "@files") == 0) {
-    DIR *d;
-    FILE *fp;
-    struct dirent *dir;
-    d = opendir(PATH);
-    char **files;
-    if (d)
-    {
-      char sizeS[10];
-      fp = popen("ls ../serverFiles | wc -l", "r");
-      while (fgets(sizeS, sizeof(char)*10, fp) != NULL) {}
-      pclose(fp);
-      int size = atoi(sizeS);
-      files = malloc(sizeof(char *) * size);
-      // printf("Select the file you wish to recv :\n"); envoie au client
-      int i = 1;
-      while ((dir = readdir(d)) != NULL)
-      {
-        if (strcmp(dir->d_name, ".") == 0) continue;
-        if (strcmp(dir->d_name, "..") == 0) continue;
-        files[i - 1] = malloc(sizeof(char)*(strlen(dir->d_name)+1));
-        strcpy(files[i - 1], dir->d_name);
-        // printf("%d\t%s\n", i, files[i - 1]); envoie au client
-        i++;
-      }
-      closedir(d);
-      char* name = chooseFile(files, i - 1);
-      char* nameToSend = (char*)malloc(sizeof(char) * (strlen(name) + 1));
-      strcpy(nameToSend, name);
-      free(files);
-      // return nameToSend; envoie au client
-    }
+    ListeFichier(fileParams.filesSocket[*pos]);
+    // return nameToSend; envoie au client
   }
   pthread_exit(0);
 }
@@ -377,12 +347,10 @@ void *fileClientLogin(int dS, struct sockaddr_in acFiles)
   {
     int *pos = malloc(sizeof(int));
     int i = getFileIndex();
-    printf("Index = %d\n", i);
     // pthread_mutex_lock(&mutex);
     fileParams.filesSocket[i] = accept(dS, (struct sockaddr *)&acFiles, &lg);
     *pos = i;
     // pthread_mutex_unlock(&mutex);
-    printf("ici\n");
 
     if (pthread_create(&fileParams.threads[i], NULL, fileManagement, (void *)pos) == -1)
     {

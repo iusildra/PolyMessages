@@ -79,9 +79,9 @@ int messagePrive(struct userTuple **sockets, int nbClient, struct userTuple *use
 
 /**
  * @brief Print the manuel page of every commands
- * 
+ *
  * @param socket the user who requested the man page
- * @return void* 
+ * @return void*
  */
 void *help(int socket)
 {
@@ -89,7 +89,8 @@ void *help(int socket)
   file = fopen("manuelFonct.txt", "r");
   char Buffer[128];
   size_t sizeBuff = 128;
-  while (fgets(Buffer, 128, file)){
+  while (fgets(Buffer, 128, file))
+  {
     if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
     {
       perror("error sendto server size");
@@ -146,28 +147,42 @@ void *ListeFichier(int socket)
   struct dirent *dir;
   // opendir() renvoie un pointeur de type DIR.
   DIR *d = opendir(PATH); // chemin pour accéder au dossier
-  char *msg = (char*)malloc(100);
   if (d)
   {
     while ((dir = readdir(d)) != NULL)
     {
-      if (dir->d_name[0]!='.'){
-        strcat(msg, dir->d_name);
-        strcat(msg, "\n");
+      if (strcmp(dir->d_name, ".") == 0)
+        continue;
+      if (strcmp(dir->d_name, "..") == 0)
+        continue;
+      char *msg = malloc(sizeof(char) * (strlen(dir->d_name) + 1));
+      strcpy(msg, dir->d_name);
+
+      size_t msgSize = sizeof(char) * (strlen(msg) + 1);
+      if (send(socket, &msgSize, sizeof(size_t), 0) == -1)
+      {
+        perror("error sendto server size");
+        exit(1);
+      }
+      if (send(socket, msg, msgSize, 0) == -1)
+      {
+        perror("error sendto server msg");
+        exit(1);
       }
     }
+    char *end = "@end";
+    size_t size = sizeof(char) * (strlen(end) + 1);
+    if (send(socket, &size, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(socket, end, size, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
     closedir(d);
-  }
-  size_t msgSize = sizeof(char) * (strlen(msg) + 1);
-  if (send(socket, &msgSize, sizeof(size_t), 0) == -1)
-  {
-    perror("error sendto server size");
-    exit(1);
-  }
-  if (send(socket, msg, msgSize, 0) == -1)
-  {
-    perror("error sendto server msg");
-    exit(1);
   }
 }
 
@@ -179,7 +194,7 @@ void *ListeFichier(int socket)
  */
 void *sendFile(int socket, char *filename)
 {
-  void* buffer;
+  void *buffer;
   FILE *file;
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
   strcpy(filepath, PATH);
@@ -187,7 +202,8 @@ void *sendFile(int socket, char *filename)
   file = popen(filepath, "r");
   size_t sizeBuffer = 128;
 
-  while (fgets(buffer, 128, file)){
+  while (fgets(buffer, 128, file))
+  {
     if (send(socket, &sizeBuffer, sizeof(size_t), 0) == -1)
     {
       perror("error sendto client size");
@@ -280,9 +296,10 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     recognized = 1;
     recvFile(sockets[position]->socket, listeMot[1]);
   }
-  
-  if (recognized == 0){
-    char* nopMsg = "This command is not recognized\n";
+
+  if (recognized == 0)
+  {
+    char *nopMsg = "This command is not recognized\n";
     size_t nopSize = 31;
     if (send(sockets[position]->socket, &nopSize, sizeof(size_t), 0) == -1)
     {

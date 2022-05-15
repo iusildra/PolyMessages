@@ -14,7 +14,6 @@
  */
 int sendFile(char *path, char* name, int socket) {
   FILE *file;
-  printf("file path : %s", path);
   file = fopen(path, "r");
   char Buffer[128];
   size_t sizeBuff = 128;
@@ -63,6 +62,7 @@ int sendFile(char *path, char* name, int socket) {
     exit(1);
   }
   fclose(file);
+  exit(0);
 }
 
 /**
@@ -186,15 +186,21 @@ char* listServFiles(int socket) {
   }
 
   size_t sizeName;
-  if (recv(socket, &sizeName, sizeof(size_t), 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
-  char *filename = malloc(sizeof(char) * sizeName);
-  if (recv(socket, listFiles, sizeName, 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
+  char *m;
+  int i = 0;
+  while (i == 0 || strcmp(m, "@end") != 0) {
+    if (recv(socket, &sizeName, sizeof(size_t), 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+    m = malloc(sizeof(char) * sizeName);
+    if (recv(socket, listFiles, sizeName, 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+    printf("%d\t%s", i, m);
+    free(m);
   }
 }

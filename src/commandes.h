@@ -23,6 +23,13 @@ int messagePrive(struct userTuple** sockets, int nbClient, struct userTuple *use
 void *help(int socket);
 
 /**
+ * @brief command listing file on the server
+ *
+ * @return void*
+ */
+void *ListeFichier(int socket);
+
+/**
  * @brief Receive a file from a client and store it where the server program is
  * 
  * @param socket infos of the client that send the file

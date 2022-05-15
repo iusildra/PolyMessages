@@ -26,9 +26,8 @@ int detectClientCommands(char* msg, int socket) {
     char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
     strcpy(path, PATH);
     strcat(path, name);
-    printf("%s\n", path);
     int pid = fork();
-    if (pid != 0)
+    if (pid == 0)
     {
       //Open a new socket
       sendFile(path, name, socket);
