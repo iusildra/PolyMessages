@@ -104,7 +104,7 @@ void sendMsg(int position, char *msg)
     nameSalon = malloc(sizeof(char) *(strlen(salons[idSalon].name)));
     strcpy(nameSalon, salons[idSalon].name);
   }else{
-    nameSalon = malloc(sizeof(char) *(strlen("\033[1;31mGénéral\033[0m")));
+    nameSalon = malloc(sizeof(char) *(strlen("\033[1;31mGénéral\033[0m") + 1));
     strcpy(nameSalon, "\033[1;31mGénéral\033[0m");
   }
   salon = malloc(sizeof(char) *(strlen(nameSalon) + 2));
@@ -310,7 +310,9 @@ void *fileManagement(void *params)
     exit(1);
   }
 
-  if (strcmp(command, "@send") == 0)//envoie de fichier
+  printf("Command is %s", command);
+
+  if (strcmp(command, "@send") == 0)
   {
     size_t size;
     if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
@@ -339,8 +341,7 @@ void *fileManagement(void *params)
       exit(1);
     }
     sendFile(fileParams.filesSocket[*pos], name);
-  } 
-  else if (strcmp(command, "@files") == 0) {
+  } else if (strcmp(command, "@file") == 0) {
     ListeFichier(fileParams.filesSocket[*pos]);
     // return nameToSend; envoie au client
   }

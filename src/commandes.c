@@ -112,7 +112,7 @@ void *recvFile(int socket, char *filename)
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
   strcpy(filepath, PATH);
   strcat(filepath, filename);
-  file = fopen(filepath, "w");
+  file = fopen(filepath, "wb");
   char Buffer[128];
   size_t sizeBuff = 128;
   while (1)
@@ -144,7 +144,17 @@ void *ListeFichier(int socket)
   // inspiré d'un code trouvé sur internet
 
   /* à modifier pour que ça récupère dans le dossier sur le serveur */
-
+  FILE* fp = popen("ls ../files | wc -l", "r");
+  char sizeS[10];
+  while (fgets(sizeS, sizeof(char) * 10, fp) != NULL)
+  {
+  }
+  pclose(fp);
+  int size = atoi(sizeS);
+  if (send(socket, &size, sizeof(int), 0) == -1) {
+    perror("error send files number");
+    exit(1);
+  }
   struct dirent *dir;
   // opendir() renvoie un pointeur de type DIR.
   DIR *d = opendir(PATH); // chemin pour accéder au dossier
@@ -187,7 +197,7 @@ void *ListeFichier(int socket)
   }
 }
 
-void* ListeSalon(int socket){
+void* ListeSalon(int socket, int nbSalon){
   char* nameSalon;
   char* descSalon;
   for (int i = 0; i < nbSalon; i++){
@@ -221,12 +231,12 @@ void* ListeSalon(int socket){
  */
 void *sendFile(int socket, char *filename)
 {
-  void *buffer;
   FILE *file;
+  char buffer[128];
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
   strcpy(filepath, PATH);
   strcat(filepath, filename);
-  file = popen(filepath, "r");
+  file = popen(filepath, "rb");
   size_t sizeBuffer = 128;
 
   while (fgets(buffer, 128, file))

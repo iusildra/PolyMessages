@@ -7,7 +7,7 @@ struct values
   socklen_t socklen;
   char *username;
   int idSalon;
-  int fileSocket;
+  int filePort;
 } values;
 
 /**

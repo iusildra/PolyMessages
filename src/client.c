@@ -13,37 +13,73 @@ int NB_THREADS = 2;
 
 /**
  * @brief Detect if the user entered a client side command
- * 
+ *
  * @param msg the messag writtent
  * @return int 0 if there was no commands, 1 otherwise
  */
-int detectClientCommands(char* msg, int socket, int fileSocketOrNot) {
+int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
+{
   int recognized = 0;
   if ((strcmp(msg, "/send\n")) == 0 && (fileSocketOrNot == 1))
   {
     recognized = 1;
     char *name = listFiles();
-    char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
+    char *path = malloc(sizeof(char) * (strlen(PATH) + strlen(name) + 1));
     strcpy(path, PATH);
     strcat(path, name);
     int pid = fork();
     if (pid == 0)
     {
-      //Open a new socket
-      sendFile(path, name, socket);
+      // Open a new socket
+      int dS = socket(PF_INET, SOCK_STREAM, 0);
+      if (dS == -1)
+      {
+        perror("NO CONNECTION TO SERVER");
+        exit(1);
+      }
+      struct sockaddr_in aS;
+      aS.sin_family = AF_INET;
+      inet_pton(AF_INET,ip, &(aS.sin_addr));
+      aS.sin_port = htons(port);
+      socklen_t lgA = sizeof(struct sockaddr_in);
+      if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
+      {
+        perror("error connect server");
+        exit(1);
+      }
+      sendFile(path, name, dS);
+      exit(0);
     }
   }
 
   if ((strcmp(msg, "/recv\n") == 0) && (fileSocketOrNot == 1)) {
     recognized = 1;
-    char *name = listServFiles(socket);
-    char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
+    int dS = socket(PF_INET, SOCK_STREAM, 0);
+      if (dS == -1)
+      {
+        perror("NO CONNECTION TO SERVER");
+        exit(1);
+      }
+      struct sockaddr_in aS;
+      aS.sin_family = AF_INET;
+      inet_pton(AF_INET,ip, &(aS.sin_addr));
+      aS.sin_port = htons(port);
+      socklen_t lgA = sizeof(struct sockaddr_in);
+      if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
+      {
+        perror("error connect server");
+        exit(1);
+      }
+    char *name = listServFiles(dS);
+    char *path = malloc(sizeof(char) * (strlen(PATH) + strlen(name) + 1));
     strcpy(path, PATH);
     strcat(path, name);
     printf("\033[34m%s\n\033[0m", path);
     int pid = fork();
-    if (pid == 0) {
-      recvFile(path, name, socket);
+    if (pid == 0)
+    {
+      recvFile(path, name, dS);
+      exit(0);
     }
   }
 
@@ -69,6 +105,31 @@ int detectClientCommands(char* msg, int socket, int fileSocketOrNot) {
   }
 
   return recognized;
+  if (strcmp(msg, "/files\n") == 0)
+  {
+    recognized = 1;
+    int dS = socket(PF_INET, SOCK_STREAM, 0);
+      if (dS == -1)
+      {
+        perror("NO CONNECTION TO SERVER");
+        exit(1);
+      }
+      struct sockaddr_in aS;
+      aS.sin_family = AF_INET;
+      inet_pton(AF_INET,ip, &(aS.sin_addr));
+      aS.sin_port = htons(port);
+      socklen_t lgA = sizeof(struct sockaddr_in);
+      if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
+      {
+        perror("error connect server");
+        exit(1);
+      }
+    listServFiles(dS);
+  }
+  if (recognized != 0)
+    return 1;
+  else
+    return 0;
 }
 
 /**
@@ -90,15 +151,13 @@ void *sendMsg(void *val)
 
     fgets(msg, maxSize, stdin);
     size = strlen(msg) + 1;
-    if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
-
-    if (detectClientCommands(msg, param->socket,0) == 1) {
-      printf("\033[31mcommande reconnue\033[0m\n");
-      free(msg);
+    if (size == 2)
+    {
       continue;
-    }
+    } // size == 2 <=> msg = "\n\0"
 
-    if (detectClientCommands(msg, param->fileSocket,1) == 1) {
+    if (detectClientCommands(msg, param->socket, param->filePort, 0) == 1) {
+      printf("\033[31mcommande reconnue\033[0m\n");
       free(msg);
       continue;
     }
@@ -188,9 +247,10 @@ void sendUsername(struct values *params)
 
   printf("\033[34mEnter your username (length must be <= %d ): \033[0m", usernameMaxSize);
   msg = malloc(sizeof(char) * usernameMaxSize);
-  do {
+  do
+  {
     fgets(msg, usernameMaxSize, stdin);
-  } while (strlen(msg) == 1); //strlen(msg==1) <=> msg = "\n\0"
+  } while (strlen(msg) == 1); // strlen(msg==1) <=> msg = "\n\0"
 
   // Send the size of the message
   if (send(params->socket, &usernameMaxSize, sizeof(int), 0) == -1)
@@ -238,7 +298,8 @@ void terminateClient(int sig)
  */
 int main(int argc, char *argv[])
 {
-  if (argc != 4) {
+  if (argc != 4)
+  {
     printf("Nombre d'arguments érroné ! ./client [addresse IP serveur] [port1] [port2] \n");
     exit(1);
   }
@@ -251,33 +312,14 @@ int main(int argc, char *argv[])
     perror("NO CONNECTION TO SERVER");
     exit(1);
   }
-  printf("\033[34mSocket Créé\033[0m\n");
-  int dSFile = socket(PF_INET, SOCK_STREAM, 0);
-  if (dSFile == -1)
-  {
-    perror("NO CONNECTION TO SERVER");
-    exit(1);
-  }
   printf("\033[34mFile Socket Créé\033[0m\n");
 
-  
   struct sockaddr_in aS;
   aS.sin_family = AF_INET;
   inet_pton(AF_INET, argv[1], &(aS.sin_addr));
   aS.sin_port = htons(atoi(argv[2]));
   socklen_t lgA = sizeof(struct sockaddr_in);
   if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
-  {
-    perror("error connect server");
-    exit(1);
-  }
-
-  struct sockaddr_in aSFile;
-  aSFile.sin_family = AF_INET;
-  inet_pton(AF_INET, argv[1], &(aSFile.sin_addr));
-  aSFile.sin_port = htons(atoi(argv[3]));
-  socklen_t lgAFile = sizeof(struct sockaddr_in);
-  if (connect(dSFile, (struct sockaddr *)&aSFile, lgAFile) == -1)
   {
     perror("error connect server");
     exit(1);
@@ -292,13 +334,12 @@ int main(int argc, char *argv[])
   values.port = argv[2];
   values.sockaddr = aS;
   values.socklen = lgA;
-  values.fileSocket = dSFile;
   values.idSalon = -1;
+  values.filePort = atoi(argv[3]);
 
   sendUsername(&values);
 
   signal(SIGINT, terminateClient);
-
   // Create thread
   pthread_create(&sendThread, NULL, sendMsg, (void *)&values);
   pthread_create(&recvThread, NULL, receiveMsg, (void *)&values);
