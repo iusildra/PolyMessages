@@ -204,3 +204,38 @@ char* listServFiles(int socket) {
     free(m);
   }
 }
+
+char* nameSalon(int socket){
+  char* msg = "Entrez un nom pour votre salon";
+  size_t size = sizeof(char) * (strlen(msg) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, msg, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  
+}
+
+char* descSalon(int socket){
+  char* msg = "Entrez une description pour le salon";
+  size_t size = sizeof(char) * (strlen(msg) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, msg, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+}
+
+void* creerSalon(char* name, char* desc){
+
+}

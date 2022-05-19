@@ -46,6 +46,15 @@ int detectClientCommands(char* msg, int socket) {
       recvFile(path, name, socket);
     }
   }
+
+  // redirection vers la commande de création de salon
+  if (strcmp(msg, "/creer\n") == 0){
+    recognized = 1;
+    char* name = nameSalon(socket);
+    char* desc = descSalon(socket);
+    creerSalon(name, desc);
+  }
+
   if (recognized != 0)
     return 1;
   else
