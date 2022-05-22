@@ -17,9 +17,9 @@ int NB_THREADS = 2;
  * @param msg the messag writtent
  * @return int 0 if there was no commands, 1 otherwise
  */
-int detectClientCommands(char* msg, int socket) {
+int detectClientCommands(char* msg, int socket, int fileSocketOrNot) {
   int recognized = 0;
-  if (strcmp(msg, "/send\n") == 0)
+  if ((strcmp(msg, "/send\n")) == 0 && (fileSocketOrNot == 1))
   {
     recognized = 1;
     char *name = listFiles();
@@ -34,7 +34,7 @@ int detectClientCommands(char* msg, int socket) {
     }
   }
 
-  if (strcmp(msg, "/recv\n") == 0) {
+  if ((strcmp(msg, "/recv\n") == 0) && (fileSocketOrNot == 1)) {
     recognized = 1;
     char *name = listServFiles(socket);
     char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
@@ -48,17 +48,29 @@ int detectClientCommands(char* msg, int socket) {
   }
 
   // redirection vers la commande de création de salon
-  if (strcmp(msg, "/creer\n") == 0){
+  if ((strcmp(msg, "/creer\n")) == 0 && (fileSocketOrNot == 0)){
     recognized = 1;
-    char* name = nameSalon(socket);
-    char* desc = descSalon(socket);
-    creerSalon(name, desc);
+    if (values.idSalon == -1){
+      values.idSalon = creerSalon(socket);
+    }else {
+      printf("Vous êtes déjà dans un channel\n");
+    }
   }
 
-  if (recognized != 0)
-    return 1;
-  else
-    return 0;
+  if ((strcmp(msg, "/quitter\n")) == 0 && (fileSocketOrNot == 0)){
+    recognized = 1;
+    if (values.idSalon == -1){
+      printf("Vous ne pouvez pas quittez le général\n");
+    }else {
+      if (quitterSalon(socket) == 1){
+        values.idSalon = -1;
+      }else{
+        printf("Vous ne pouvez pas quittez un channel dont vous êtes l'admin\n");
+      }
+    }
+  }
+
+  return recognized;
 }
 
 /**
@@ -82,7 +94,13 @@ void *sendMsg(void *val)
     size = strlen(msg) + 1;
     if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
 
-    if (detectClientCommands(msg, param->fileSocket) == 1) {
+    if (detectClientCommands(msg, param->socket,0) == 1) {
+      printf("ou là??");
+      free(msg);
+      continue;
+    }
+
+    if (detectClientCommands(msg, param->fileSocket,1) == 1) {
       free(msg);
       continue;
     }
@@ -126,14 +144,14 @@ void *receiveMsg(void *params)
     size_t size;
     if (recv(parameters->socket, &size, sizeof(size_t), 0) == -1)
     {
-      perror("error recv");
+      perror("error recv size");
       exit(1);
     }
 
     char *msg = malloc(sizeof(char) * size);
     if (recv(parameters->socket, msg, sizeof(char) * size, 0) == -1)
     {
-      perror("error recv");
+      perror("error recv msg");
       exit(1);
     }
     if (strcmp(end, msg) == 0)
@@ -277,6 +295,7 @@ int main(int argc, char *argv[])
   values.sockaddr = aS;
   values.socklen = lgA;
   values.fileSocket = dSFile;
+  values.idSalon = -1;
 
   sendUsername(&values);
 

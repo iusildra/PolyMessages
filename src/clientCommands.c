@@ -206,8 +206,11 @@ char* listServFiles(int socket) {
 }
 
 char* nameSalon(int socket){
-  char* msg = "Entrez un nom pour votre salon";
-  size_t size = sizeof(char) * (strlen(msg) + 1);
+  printf("Entrez un nom pour votre salon (de taille 20 max)\n");
+  char* msg = malloc(20);
+  scanf("%s",msg);
+  size_t size = sizeof(char) * (strlen(msg));
+  
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
     perror("error send client");
@@ -222,8 +225,11 @@ char* nameSalon(int socket){
 }
 
 char* descSalon(int socket){
-  char* msg = "Entrez une description pour le salon";
-  size_t size = sizeof(char) * (strlen(msg) + 1);
+  printf("Entrez une description pour le salon (de taille 200 max)\n");
+  char* msg = malloc(200);
+  scanf("%s",msg);
+  size_t size = sizeof(char) * (strlen(msg));
+  
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
     perror("error send client");
@@ -236,6 +242,55 @@ char* descSalon(int socket){
   }
 }
 
-void* creerSalon(char* name, char* desc){
+int quitterSalon(int socket){
+  char* msg = "@qsal";
+  size_t size = sizeof(char) * (strlen(msg) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, msg, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  int success;
+  if (recv(socket, &success, sizeof(int), 0) == -1)
+    {
+      perror("error receive success");
+      exit(1);
+    }
+  return success;
+}
 
+int creerSalon(int socket){
+  char* msg = "@csal";
+  size_t size = sizeof(char) * (strlen(msg) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, msg, size, 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+
+  char* name = nameSalon(socket);
+  char* desc = descSalon(socket);
+  printf("ntm\n");
+  int idSalon;
+  if (recv(socket, &idSalon, sizeof(int), 0) == -1)
+    {
+      perror("error receive idSalon");
+      exit(1);
+    }
+  if (idSalon == -1){
+    printf("Le salon n'a pas pu être créé\n");
+  }else {
+    printf("Le salon a été créé!\n");
+  }
+  return idSalon;
 }

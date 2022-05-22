@@ -6,7 +6,7 @@ struct values
   struct sockaddr_in sockaddr;
   socklen_t socklen;
   char *username;
-  char* salon;
+  int idSalon;
   int fileSocket;
 } values;
 

@@ -40,3 +40,11 @@ char *listFiles();
  * @return char* the path of the file to send
  */
 char* listServFiles(int socket);
+
+char* nameSalon(int socket);
+
+char* descSalon(int socket);
+
+int creerSalon(int socket);
+
+int quitterSalon(int socket);

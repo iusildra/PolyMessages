@@ -231,6 +231,18 @@ void *sendFile(int socket, char *filename)
   }
 }
 
+int creerSalon(char* name, char* desc, int socket){
+  int i = 0;
+  while (i < MAX_NB_SALONS && salons[i].name != NULL)
+  {
+    i++;
+  }
+  salons[i].admin = socket;
+  salons[i].desc = desc;
+  salons[i].name = name;
+  return i;
+}
+
 /**
  * @brief Launch command execution
  *
@@ -289,6 +301,63 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
   {
     recognized = 1;
     ListeFichier(sockets[position]->socket);
+  }
+
+  if (strcmp(listeMot[0], "@qsal") == 0){//quitter un salon
+    int success = 1;
+    if (sockets[position]->socket == salons[sockets[position]->idsalon].admin && salons[sockets[position]->idsalon].connected > 1){
+      success = 0;
+    }else {
+      if (salons[sockets[position]->idsalon].connected == 1){
+        //supprimer salon
+      }
+      sockets[position]->idsalon = -1;
+    }
+    if (send(sockets[position]->socket, &success, sizeof(int), 0) == -1)
+    {
+      perror("error send idSalon server");
+      exit(1);
+    }
+  }
+
+  if (strcmp(listeMot[0], "@csal") == 0) {//création d'un salon
+    recognized = 1;
+    size_t sizeName;//réception nom salon
+    if (recv(sockets[position]->socket, &sizeName, sizeof(size_t), 0) == -1)
+    {
+      perror("error recv salon name server");
+      exit(1);
+    }
+    char *name = malloc(sizeName);
+    if (recv(sockets[position]->socket, name, sizeName, 0) == -1)
+    {
+      perror("error recv salon name server");
+      exit(1);
+    }//fin réception nom salon
+
+    size_t sizeDesc;//réception description salon
+    if (recv(sockets[position]->socket, &sizeDesc, sizeof(size_t), 0) == -1)
+    {
+      perror("error recv salon desc server");
+      exit(1);
+    }
+    char *desc = malloc(sizeDesc);
+    if (recv(sockets[position]->socket, desc, sizeDesc, 0) == -1)
+    {
+      perror("error recv salon desc server");
+      exit(1);
+    }//fin réception description salon
+
+    //envoi id du salon, le créateur du salon rentre dans le salon à la création
+    sockets[position]->idsalon=idSalon;
+    
+    int idSalon = creerSalon(name,desc,sockets[position]->socket);
+    if (send(sockets[position]->socket, &idSalon, sizeof(int), 0) == -1)
+    {
+      perror("error send idSalon server");
+      exit(1);
+    }
+    
   }
 
   if (strcmp(listeMot[0], "@send") == 0)

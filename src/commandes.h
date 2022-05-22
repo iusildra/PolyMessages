@@ -1,9 +1,22 @@
+#define MAX_NB_SALONS 10
+#define MAX_NB_CLIENTS 10 
+
 struct userTuple
 {
 	char *username;
+	int idsalon;
 	int socket;
 };
 
+struct salon_struct ; //parameters of a salon
+struct salon_struct
+{
+  int admin; //socket of the admin
+  int connected; //utilisateurs connectés
+  char* name;
+  char* desc;
+};
+struct salon_struct salons[MAX_NB_SALONS];
 /**
  * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
  *
@@ -62,3 +75,5 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
  * @param user
  */
 void deco(int user);
+
+int creerSalon(char* name, char* desc, int socket);

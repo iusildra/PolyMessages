@@ -96,6 +96,22 @@ char *getUsername(int position)
  */
 void sendMsg(int position, char *msg)
 {
+
+  int idSalon = connection.socks[position]->idsalon;
+  char *salon;
+  char *nameSalon;
+  if (idSalon != -1){
+    nameSalon = malloc(sizeof(char) *(strlen(salons[idSalon].name)));
+    strcpy(nameSalon, salons[idSalon].name);
+  }else{
+    nameSalon = malloc(sizeof(char) *(strlen("\033[1;31mGénéral\033[0m")));
+    strcpy(nameSalon, "\033[1;31mGénéral\033[0m");
+  }
+  salon = malloc(sizeof(char) *(strlen(nameSalon) + 2));
+  strcpy(salon, "[");
+  strcat(salon, nameSalon);
+  strcat(salon, "]");
+
   char *username = connection.socks[position]->username;
   char *delimiter = " -> ";
   for (int i = 0; i < connection.nbClients; i++)
@@ -104,9 +120,10 @@ void sendMsg(int position, char *msg)
     {
       continue;
     }
-    size_t fullSize = sizeof(char) * (strlen(username) + strlen(delimiter) + strlen(msg) + 1);
+    size_t fullSize = sizeof(char) * (strlen(salon) + strlen(username) + strlen(delimiter) + strlen(msg) + 1);
     char *fullMsg = malloc(fullSize);
-    strcpy(fullMsg, username);
+    strcpy(fullMsg, salon);
+    strcat(fullMsg, username);
     strcat(fullMsg, delimiter);
     strcat(fullMsg, msg);
 
@@ -155,6 +172,7 @@ void *clientManagement(void *params)
     pthread_exit(0);
   }
   printf("%s just connected !\n", connection.socks[*position]->username);
+  connection.socks[*position]->idsalon = -1;
 
   // Loop as long as the client doesn't send '/DC'
   while (1)
@@ -181,7 +199,7 @@ void *clientManagement(void *params)
       sendDisconnection(connection.socks[*position]);
       break;
     }
-    if (msg[0] == '/' && strcmp(msg, end) != 0)
+    if ((msg[0] == '/' || msg[0] == '@') && strcmp(msg, end) != 0)
     {
       executer(connection.socks, connection.nbClients, msg, *position);
     }
@@ -292,7 +310,7 @@ void *fileManagement(void *params)
     exit(1);
   }
 
-  if (strcmp(command, "@send") == 0)
+  if (strcmp(command, "@send") == 0)//envoie de fichier
   {
     size_t size;
     if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
@@ -307,7 +325,7 @@ void *fileManagement(void *params)
       exit(1);
     }
     recvFile(fileParams.filesSocket[*pos], name);
-  } else if (strcmp(command, "@recv") == 0) {
+  } else if (strcmp(command, "@recv") == 0) {//reception de fichier
     size_t size;
     if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
     {
@@ -321,7 +339,8 @@ void *fileManagement(void *params)
       exit(1);
     }
     sendFile(fileParams.filesSocket[*pos], name);
-  }  else if (strcmp(command, "@files") == 0) {
+  } 
+  else if (strcmp(command, "@files") == 0) {
     ListeFichier(fileParams.filesSocket[*pos]);
     // return nameToSend; envoie au client
   }
