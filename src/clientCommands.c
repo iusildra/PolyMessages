@@ -14,10 +14,6 @@
  */
 int sendFile(char *path, char *name, int socket)
 {
-  FILE *file;
-  file = fopen(path, "rb");
-  char Buffer[128];
-  size_t sizeBuff = 128;
   // send signal for file managemnt
   if (send(socket, "@send", sizeof(char) * 6, 0) == -1)
   {
@@ -36,33 +32,24 @@ int sendFile(char *path, char *name, int socket)
     perror("error send client");
     exit(1);
   }
-  // send the file lign per lign
-  while (fgets(Buffer, 128, file))
+    
+  FILE *file;
+  file = fopen(path, "rb");
+  int TAILLE_BUF = 2000;
+  short int buffer[TAILLE_BUF];
+  printf("SEND MODE : %s, filepath : %s\n", buffer, path);
+  int nb_val_lue;
+  while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUF, file)) != 0)
   {
-    if (send(socket, &sizeBuff, sizeof(size_t), 0) == -1)
-    {
-      perror("error sendto client size");
-      exit(1);
-    }
-    if (send(socket, Buffer, sizeBuff, 0) == -1)
+    if (send(socket, buffer, sizeof(short int)*nb_val_lue, 0) == -1)
     {
       perror("error sendto client msg");
       exit(1);
     }
+    printf("Nb valeurs : %d\n", nb_val_lue);
+    nb_val_lue = fread(buffer, sizeof(short int), nb_val_lue, file);
   }
-  // send signal of the end of the send file
-  char *end = "@end";
-  size = sizeof(char) * (strlen(end) + 1);
-  if (send(socket, &size, sizeof(size_t), 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
-  if (send(socket, end, size, 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
+
   fclose(file);
   exit(0);
 }
@@ -75,11 +62,6 @@ int sendFile(char *path, char *name, int socket)
  */
 int recvFile(char *path, char *filename, int socket)
 {
-  if (send(socket, "@recv", sizeof(char) * 6, 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
   size_t size = sizeof(char) * (strlen(filename) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
@@ -92,27 +74,25 @@ int recvFile(char *path, char *filename, int socket)
     exit(1);
   }
   FILE *file;
+  int TAILLE_BUF = 2000;
   file = fopen(path, "wb");
-  char Buffer[128];
-  size_t sizeBuff;
-  int end = 0;
-  while (end == 0)
+  short int buffer[TAILLE_BUF];
+  int sizeBuff;
+  while (1)
   {
-    if (recv(socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    short int r = recv(socket, buffer, sizeof(short int) * TAILLE_BUF, 0);
+    if (r == -1)
     {
-      perror("error sendto server size");
+      perror("error recv client msg");
       exit(1);
     }
-    if (recv(socket, Buffer, sizeBuff, 0) == -1)
-    {
-      perror("error sendto server msg");
-      exit(1);
-    }
-    if (strcmp(Buffer, "@end") == 0)
+    if (r == 0) {
       break;
-    printf("%s\n", Buffer);
-    fprintf(file, "%s", Buffer);
+    }
+    printf("Connection state : %d\n", r/2);
+    fwrite(buffer, sizeof(short int), r/2, file);
   }
+
   fclose(file);
 }
 
@@ -180,8 +160,7 @@ char *listFiles()
 
 char *listServFiles(int socket)
 {
-  char *listFiles = "@file";
-  if (send(socket, listFiles, sizeof(char) * 6, 0) == -1)
+  if (send(socket, "@recv", sizeof(char) * 6, 0) == -1)
   {
     perror("error send @file client");
     exit(1);

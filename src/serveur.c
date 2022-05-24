@@ -310,7 +310,7 @@ void *fileManagement(void *params)
     exit(1);
   }
 
-  printf("Command is %s", command);
+  printf("Command is %s\n", command);
 
   if (strcmp(command, "@send") == 0)
   {
@@ -329,6 +329,8 @@ void *fileManagement(void *params)
     recvFile(fileParams.filesSocket[*pos], name);
   } else if (strcmp(command, "@recv") == 0) {//reception de fichier
     size_t size;
+    ListeFichier(fileParams.filesSocket[*pos]);
+
     if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)
     {
       perror("error send file server");
@@ -340,11 +342,11 @@ void *fileManagement(void *params)
       perror("error send file server");
       exit(1);
     }
+    printf("Name is %s, size is %ld", name, size);
     sendFile(fileParams.filesSocket[*pos], name);
-  } else if (strcmp(command, "@file") == 0) {
-    ListeFichier(fileParams.filesSocket[*pos]);
-    // return nameToSend; envoie au client
   }
+  shutdown(fileParams.filesSocket[*pos], 2);
+  fileParams.filesSocket[*pos] == -1;
   pthread_exit(0);
 }
 

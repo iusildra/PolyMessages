@@ -113,24 +113,24 @@ void *recvFile(int socket, char *filename)
   strcpy(filepath, PATH);
   strcat(filepath, filename);
   file = fopen(filepath, "wb");
-  char Buffer[128];
-  size_t sizeBuff = 128;
+  int TAILLE_BUFF = 2000;
+  short int buffer[TAILLE_BUFF];
+  int sizeBuff;
   while (1)
   {
-    if (recv(socket, &sizeBuff, sizeof(size_t), 0) == -1)
+    short int r = recv(socket, buffer, sizeof(short int) * TAILLE_BUFF, 0);
+    if (r == -1)
     {
-      perror("error sendto server size");
+      perror("error recv client msg");
       exit(1);
     }
-    if (recv(socket, Buffer, sizeBuff, 0) == -1)
-    {
-      perror("error sendto server msg");
-      exit(1);
-    }
-    if (strcmp(Buffer, "@end") == 0)
+    if (r == 0) {
       break;
-    fprintf(file, "%s", Buffer);
+    }
+    printf("Connection state : %d\n", r/2);
+    fwrite(buffer, sizeof(short int), r/2, file);
   }
+
   fclose(file);
 }
 
@@ -144,14 +144,15 @@ void *ListeFichier(int socket)
   // inspiré d'un code trouvé sur internet
 
   /* à modifier pour que ça récupère dans le dossier sur le serveur */
-  FILE* fp = popen("ls ../files | wc -l", "r");
+  FILE *fp = popen("ls ../files | wc -l", "r");
   char sizeS[10];
   while (fgets(sizeS, sizeof(char) * 10, fp) != NULL)
   {
   }
   pclose(fp);
   int size = atoi(sizeS);
-  if (send(socket, &size, sizeof(int), 0) == -1) {
+  if (send(socket, &size, sizeof(int), 0) == -1)
+  {
     perror("error send files number");
     exit(1);
   }
@@ -231,41 +232,27 @@ void* ListeSalon(int socket, int nbSalon){
  */
 void *sendFile(int socket, char *filename)
 {
+  int TAILLE_BUFF = 8000;
   FILE *file;
-  char buffer[128];
+  short int buffer[TAILLE_BUFF];
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
   strcpy(filepath, PATH);
   strcat(filepath, filename);
-  file = popen(filepath, "rb");
-  size_t sizeBuffer = 128;
-
-  while (fgets(buffer, 128, file))
+  printf("%s\n", filepath);
+  file = fopen(filepath, "rb");
+  printf("SEND MODE : %s, filepath : %s\n", buffer, filepath);
+  int nb_val_lue;
+  while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUFF, file)) != 0)
   {
-    if (send(socket, &sizeBuffer, sizeof(size_t), 0) == -1)
-    {
-      perror("error sendto client size");
-      exit(1);
-    }
-    if (send(socket, buffer, sizeBuffer, 0) == -1)
+    if (send(socket, buffer, sizeof(short int)*TAILLE_BUFF, 0) == -1)
     {
       perror("error sendto client msg");
       exit(1);
     }
+    printf("Nb valuers : %d\n", nb_val_lue);
+    nb_val_lue = fread(buffer, sizeof(short int), nb_val_lue, file);
   }
   fclose(file);
-
-  char *end = "@end";
-  size_t size = sizeof(char) * (strlen(end) + 1);
-  if (send(socket, &size, sizeof(size_t), 0) == -1)
-  {
-    perror("error sendto client");
-    exit(1);
-  }
-  if (send(socket, end, size, 0) == -1)
-  {
-    perror("error sendto client");
-    exit(1);
-  }
 }
 
 int creerSalon(char* name, char* desc, int socket){

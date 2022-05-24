@@ -55,22 +55,25 @@ int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
   if ((strcmp(msg, "/recv\n") == 0) && (fileSocketOrNot == 1)) {
     recognized = 1;
     int dS = socket(PF_INET, SOCK_STREAM, 0);
-      if (dS == -1)
-      {
-        perror("NO CONNECTION TO SERVER");
-        exit(1);
-      }
-      struct sockaddr_in aS;
-      aS.sin_family = AF_INET;
-      inet_pton(AF_INET,ip, &(aS.sin_addr));
-      aS.sin_port = htons(port);
-      socklen_t lgA = sizeof(struct sockaddr_in);
-      if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
-      {
-        perror("error connect server");
-        exit(1);
-      }
+    if (dS == -1)
+    {
+      perror("NO CONNECTION TO SERVER");
+      exit(1);
+    }
+    struct sockaddr_in aS;
+    aS.sin_family = AF_INET;
+    inet_pton(AF_INET,ip, &(aS.sin_addr));
+    aS.sin_port = htons(port);
+    socklen_t lgA = sizeof(struct sockaddr_in);
+    if (connect(dS, (struct sockaddr *)&aS, lgA) == -1)
+    {
+      perror("error connect server");
+      exit(1);
+    }
     char *name = listServFiles(dS);
+    char *nameToSend = malloc(sizeof(char) * (strlen(name) + 1));
+    strcpy(nameToSend, name);
+
     char *path = malloc(sizeof(char) * (strlen(PATH) + strlen(name) + 1));
     strcpy(path, PATH);
     strcat(path, name);
@@ -78,7 +81,8 @@ int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
     int pid = fork();
     if (pid == 0)
     {
-      recvFile(path, name, dS);
+      recvFile(path, nameToSend, dS);
+      free(nameToSend);
       exit(0);
     }
   }
