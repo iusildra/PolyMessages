@@ -186,6 +186,33 @@ void *ListeFichier(int socket)
   }
 }
 
+void* ListeSalon(int socket){
+  char* nameSalon;
+  char* descSalon;
+  for (int i = 0; i < connection.nbSalon; i++){
+    nameSalon = salons[i].name;
+    descSalon = salons[i].desc;
+    char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 5)
+    strcat(msg, nameSalon);
+    strcat(msg, " - ");
+    strcat(msg, descSalon);
+    strcat(msg, "\n");
+    size_t msgSize = sizeof(char) * (strlen(msg) + 1);
+    if (send(socket, &msgSize, sizeof(size_t), 0) == -1)
+    {
+      perror("error sendto server size");
+      exit(1);
+    }
+    if (send(socket, msg, msgSize, 0) == -1)
+    {
+      perror("error sendto server msg");
+      exit(1);
+    }
+    free(msg)
+  }
+
+}
+
 /**
  * @brief command sending a file from the server to a user
  *
@@ -301,6 +328,13 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
   {
     recognized = 1;
     ListeFichier(sockets[position]->socket);
+  }
+
+  // redirection vers la commande listant les salons présents sur le serveur
+  if (strcmp(listeMot[0], "/salon\n") == 0)
+  {
+    recognized = 1;
+    ListeSalon(sockets[position]->socket);
   }
 
   if (strcmp(listeMot[0], "@qsal") == 0){//quitter un salon

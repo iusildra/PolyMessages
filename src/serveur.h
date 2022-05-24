@@ -6,6 +6,7 @@ struct parametres_struct
   int dS;
   socklen_t lg;
   int nbClients;
+  int nbSalon;
   struct userTuple *socks[MAX_NB_CLIENTS];
   struct sockaddr_in aC;
 };

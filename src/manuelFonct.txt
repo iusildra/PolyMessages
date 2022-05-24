@@ -18,6 +18,11 @@ Ne prends pas de paramètre
 Lorsqu'un utilisateur se sert de cette fonction, elle lui envoie la liste des fichiers présents sur le serveur
 Utilisation de la commande : /Files
 
+Fonctionnalité d'affichage des salons présents sur le serveur :
+Ne prends pas de paramètre
+Lorsqu'un utilisateur se sert de cette fonction, elle lui envoie la liste des salons présents sur le serveur ainsi que leur description
+Utilisation de la commande : /salon
+
 Fonctionnalité de récupération de fichier présent sur le serveur :
 Prends en paramètre le nom du fichier que l'utilisateur souhaite récupérer sur le serveur
 Lorsqu'un utilisateur appelle cette fonction, elle lui envoie le fichier qu'il veut récupérer sur le serveur
