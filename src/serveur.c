@@ -116,7 +116,7 @@ void sendMsg(int position, char *msg)
   char *delimiter = " -> ";
   for (int i = 0; i < connection.nbClients; i++)
   {
-    if (connection.socks[i] == NULL)
+    if (connection.socks[i] == NULL || (connection.socks[i]->idsalon != idSalon))
     {
       continue;
     }

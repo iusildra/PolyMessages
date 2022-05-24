@@ -40,7 +40,7 @@ int detectClientCommands(char* msg, int socket, int fileSocketOrNot) {
     char* path = malloc(sizeof(char)*(strlen(PATH) + strlen(name)+1));
     strcpy(path, PATH);
     strcat(path, name);
-    printf("%s\n", path);
+    printf("\033[34m%s\n\033[0m", path);
     int pid = fork();
     if (pid == 0) {
       recvFile(path, name, socket);
@@ -53,20 +53,18 @@ int detectClientCommands(char* msg, int socket, int fileSocketOrNot) {
     if (values.idSalon == -1){
       values.idSalon = creerSalon(socket);
     }else {
-      printf("Vous êtes déjà dans un channel\n");
+      printf("\033[34mVous êtes déjà dans un channel\033[0m\n");
     }
   }
 
   if ((strcmp(msg, "/quitter\n")) == 0 && (fileSocketOrNot == 0)){
     recognized = 1;
     if (values.idSalon == -1){
-      printf("Vous ne pouvez pas quittez le général\n");
+      printf("\033[34mVous ne pouvez pas quittez le général\033[0m\n");
     }else {
-      if (quitterSalon(socket) == 1){
-        values.idSalon = -1;
-      }else{
-        printf("Vous ne pouvez pas quittez un channel dont vous êtes l'admin\n");
-      }
+      quitterSalon(socket);
+      values.idSalon = -1;
+      printf("\033[34mVous voilà dans le général!\033[0m\n");
     }
   }
 
@@ -95,7 +93,7 @@ void *sendMsg(void *val)
     if (size == 2) { continue; } //size == 2 <=> msg = "\n\0"
 
     if (detectClientCommands(msg, param->socket,0) == 1) {
-      printf("ou là??");
+      printf("\033[31mcommande reconnue\033[0m\n");
       free(msg);
       continue;
     }
@@ -156,7 +154,7 @@ void *receiveMsg(void *params)
     }
     if (strcmp(end, msg) == 0)
     {
-      printf("Disconnection complete\n");
+      printf("\033[34mDisconnection complete\033[0m\n");
       exit(0);
     }
 
@@ -188,7 +186,7 @@ void sendUsername(struct values *params)
   printf("%s\n", msg);
   free(msg);
 
-  printf("Enter your username (length must be <= %d): ", usernameMaxSize);
+  printf("\033[34mEnter your username (length must be <= %d ): \033[0m", usernameMaxSize);
   msg = malloc(sizeof(char) * usernameMaxSize);
   do {
     fgets(msg, usernameMaxSize, stdin);
@@ -245,7 +243,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  printf("Début programme\n");
+  printf("\033[34mDébut programme\033[0m\n");
   // Socket initialization
   int dS = socket(PF_INET, SOCK_STREAM, 0);
   if (dS == -1)
@@ -253,14 +251,14 @@ int main(int argc, char *argv[])
     perror("NO CONNECTION TO SERVER");
     exit(1);
   }
-  printf("Socket Créé\n");
+  printf("\033[34mSocket Créé\033[0m\n");
   int dSFile = socket(PF_INET, SOCK_STREAM, 0);
   if (dSFile == -1)
   {
     perror("NO CONNECTION TO SERVER");
     exit(1);
   }
-  printf("File Socket Créé\n");
+  printf("\033[34mFile Socket Créé\033[0m\n");
 
   
   struct sockaddr_in aS;
@@ -315,6 +313,6 @@ int main(int argc, char *argv[])
     exit(1);
   };
 
-  printf("\nFin du programme\n");
+  printf("\n\033[34mFin du programme\033[0m\n");
   return 0;
 }

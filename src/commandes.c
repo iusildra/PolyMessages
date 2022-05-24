@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 #include <dirent.h>
 #include "commandes.h"
@@ -189,10 +190,10 @@ void *ListeFichier(int socket)
 void* ListeSalon(int socket){
   char* nameSalon;
   char* descSalon;
-  for (int i = 0; i < connection.nbSalon; i++){
+  for (int i = 0; i < nbSalon; i++){
     nameSalon = salons[i].name;
     descSalon = salons[i].desc;
-    char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 5)
+    char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 5);
     strcat(msg, nameSalon);
     strcat(msg, " - ");
     strcat(msg, descSalon);
@@ -208,9 +209,8 @@ void* ListeSalon(int socket){
       perror("error sendto server msg");
       exit(1);
     }
-    free(msg)
+    free(msg);
   }
-
 }
 
 /**
@@ -267,7 +267,13 @@ int creerSalon(char* name, char* desc, int socket){
   salons[i].admin = socket;
   salons[i].desc = desc;
   salons[i].name = name;
+  salons[i].connected++;
   return i;
+}
+
+void* quitterSalon(struct userTuple* user){
+  salons[user->idsalon].connected--;
+  user->idsalon = -1;
 }
 
 /**
@@ -330,28 +336,9 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     ListeFichier(sockets[position]->socket);
   }
 
-  // redirection vers la commande listant les salons présents sur le serveur
-  if (strcmp(listeMot[0], "/salon\n") == 0)
-  {
-    recognized = 1;
-    ListeSalon(sockets[position]->socket);
-  }
-
   if (strcmp(listeMot[0], "@qsal") == 0){//quitter un salon
-    int success = 1;
-    if (sockets[position]->socket == salons[sockets[position]->idsalon].admin && salons[sockets[position]->idsalon].connected > 1){
-      success = 0;
-    }else {
-      if (salons[sockets[position]->idsalon].connected == 1){
-        //supprimer salon
-      }
-      sockets[position]->idsalon = -1;
-    }
-    if (send(sockets[position]->socket, &success, sizeof(int), 0) == -1)
-    {
-      perror("error send idSalon server");
-      exit(1);
-    }
+    recognized = 1;
+    quitterSalon(sockets[position]);
   }
 
   if (strcmp(listeMot[0], "@csal") == 0) {//création d'un salon
@@ -383,14 +370,16 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     }//fin réception description salon
 
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
-    sockets[position]->idsalon=idSalon;
-    
     int idSalon = creerSalon(name,desc,sockets[position]->socket);
+    sockets[position]->idsalon=idSalon;
+    printf("Création salon d'id = %d\n", idSalon);
+    
     if (send(sockets[position]->socket, &idSalon, sizeof(int), 0) == -1)
     {
       perror("error send idSalon server");
       exit(1);
     }
+    printf("envoi salon d'id = %d\n", idSalon);
     
   }
 

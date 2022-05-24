@@ -47,4 +47,4 @@ char* descSalon(int socket);
 
 int creerSalon(int socket);
 
-int quitterSalon(int socket);
+void* quitterSalon(int socket);
