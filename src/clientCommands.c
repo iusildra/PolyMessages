@@ -34,20 +34,18 @@ int sendFile(char *path, char *name, int socket)
   }
     
   FILE *file;
+  FILE *file2;
   file = fopen(path, "rb");
   int TAILLE_BUF = 2000;
   short int buffer[TAILLE_BUF];
-  printf("SEND MODE : %s, filepath : %s\n", buffer, path);
   int nb_val_lue;
-  while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUF, file)) != 0)
+  while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUF, file)) > 0)
   {
     if (send(socket, buffer, sizeof(short int)*nb_val_lue, 0) == -1)
     {
       perror("error sendto client msg");
       exit(1);
     }
-    printf("Nb valeurs : %d\n", nb_val_lue);
-    nb_val_lue = fread(buffer, sizeof(short int), nb_val_lue, file);
   }
 
   fclose(file);
@@ -89,7 +87,6 @@ int recvFile(char *path, char *filename, int socket)
     if (r == 0) {
       break;
     }
-    printf("Connection state : %d\n", r/2);
     fwrite(buffer, sizeof(short int), r/2, file);
   }
 

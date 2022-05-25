@@ -127,7 +127,6 @@ void *recvFile(int socket, char *filename)
     if (r == 0) {
       break;
     }
-    printf("Connection state : %d\n", r/2);
     fwrite(buffer, sizeof(short int), r/2, file);
   }
 
@@ -237,7 +236,7 @@ void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
  */
 void *sendFile(int socket, char *filename)
 {
-  int TAILLE_BUFF = 8000;
+  int TAILLE_BUFF = 2000;
   FILE *file;
   short int buffer[TAILLE_BUFF];
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
@@ -245,7 +244,6 @@ void *sendFile(int socket, char *filename)
   strcat(filepath, filename);
   printf("%s\n", filepath);
   file = fopen(filepath, "rb");
-  printf("SEND MODE : %s, filepath : %s\n", buffer, filepath);
   int nb_val_lue;
   while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUFF, file)) != 0)
   {
@@ -254,8 +252,6 @@ void *sendFile(int socket, char *filename)
       perror("error sendto client msg");
       exit(1);
     }
-    printf("Nb valuers : %d\n", nb_val_lue);
-    nb_val_lue = fread(buffer, sizeof(short int), nb_val_lue, file);
   }
   fclose(file);
 }
