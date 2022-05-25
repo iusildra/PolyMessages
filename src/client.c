@@ -91,24 +91,13 @@ int detectClientCommands(char *msg, char* ip, int port, int sock)
   if ((strcmp(msg, "/creer\n")) == 0){
     recognized = 1;
     if (values.idSalon == -1){
-      values.idSalon = creerSalon(sock);
+      creerSalon(sock);
     }else {
       printf("\033[34mVous êtes déjà dans un channel\033[0m\n");
     }
   }
 
-  if ((strcmp(msg, "/quitter\n")) == 0){
-    recognized = 1;
-    if (values.idSalon == -1){
-      printf("\033[34mVous ne pouvez pas quittez le général\033[0m\n");
-    }else {
-      quitterSalon(sock);
-      values.idSalon = -1;
-      printf("\033[34mVous voilà dans le général!\033[0m\n");
-    }
-  }
 
-  return recognized;
   if (strcmp(msg, "/files\n") == 0)
   {
     recognized = 1;

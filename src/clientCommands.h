@@ -45,6 +45,4 @@ char* nameSalon(int socket);
 
 char* descSalon(int socket);
 
-int creerSalon(int socket);
-
-void* quitterSalon(int socket);
+void* creerSalon(int socket);

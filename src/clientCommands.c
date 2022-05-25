@@ -204,8 +204,12 @@ char *listServFiles(int socket)
 
 char* nameSalon(int socket){
   printf("\033[34mEntrez un nom pour votre salon (de taille 20 max)\033[0m\n");
-  char* msg = malloc(20);
-  scanf("%s",msg);
+  int salonMaxSize = 20;
+  char* msg = malloc(sizeof(char) * 20);
+  do
+  {
+    fgets(msg, salonMaxSize, stdin);
+  } while (strlen(msg) == 1); // strlen(msg==1) <=> msg = "\n\0"
   size_t size = sizeof(char) * (strlen(msg));
   
   if (send(socket, &size, sizeof(size_t), 0) == -1)
@@ -239,22 +243,8 @@ char* descSalon(int socket){
   }
 }
 
-void* quitterSalon(int socket){
-  char* msg = "@qsal";
-  size_t size = sizeof(char) * (strlen(msg) + 1);
-  if (send(socket, &size, sizeof(size_t), 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
-  if (send(socket, msg, size, 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
-}
 
-int creerSalon(int socket){
+void* creerSalon(int socket){
   char* msg = "@csal";
   size_t size = sizeof(char) * (strlen(msg) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
@@ -270,17 +260,6 @@ int creerSalon(int socket){
 
   char* name = nameSalon(socket);
   char* desc = descSalon(socket);
-  int idSalon;
-  if (recv(socket, &idSalon, sizeof(int), 0) == -1)
-  {
-    perror("error receive idSalon");
-    exit(1);
-  }
-  printf("\033[31mreception id salon\033[0m\n");
-  if (idSalon == -1){
-    printf("\033[34mLe salon n'a pas pu être créé\033[0m\n");
-  }else {
-    printf("\033[34mLe salon a été créé!\033[0m\n");
-  }
-  return idSalon;
+
+  printf("\033[34mLe salon a été créé!\033[0m\n");
 }

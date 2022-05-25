@@ -333,7 +333,7 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     ListeFichier(sockets[position]->socket);
   }
 
-  if (strcmp(listeMot[0], "@qsal") == 0){//quitter un salon
+  if (strcmp(listeMot[0], "/quitter\n") == 0){//quitter un salon
     recognized = 1;
     quitterSalon(sockets[position], salons);
   }
@@ -370,13 +370,6 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     int idSalon = creerSalon(name,desc,sockets[position]->socket, salons, size);
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
-    
-    if (send(sockets[position]->socket, &idSalon, sizeof(int), 0) == -1)
-    {
-      perror("error send idSalon server");
-      exit(1);
-    }
-    printf("envoi salon d'id = %d\n", idSalon);
     
   }
 
