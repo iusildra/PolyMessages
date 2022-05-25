@@ -198,6 +198,11 @@ void *ListeFichier(int socket)
   }
 }
 
+/**
+ * @brief command listing channels on the server
+ *
+ * @return void*
+ */
 void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
   char* nameSalon;
   char* descSalon;
