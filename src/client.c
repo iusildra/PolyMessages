@@ -17,10 +17,10 @@ int NB_THREADS = 2;
  * @param msg the messag writtent
  * @return int 0 if there was no commands, 1 otherwise
  */
-int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
+int detectClientCommands(char *msg, char* ip, int port, int sock)
 {
   int recognized = 0;
-  if ((strcmp(msg, "/send\n")) == 0 && (fileSocketOrNot == 1))
+  if ((strcmp(msg, "/send\n")) == 0)
   {
     recognized = 1;
     char *name = listFiles();
@@ -52,7 +52,7 @@ int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
     }
   }
 
-  if ((strcmp(msg, "/recv\n") == 0) && (fileSocketOrNot == 1)) {
+  if ((strcmp(msg, "/recv\n") == 0)) {
     recognized = 1;
     int dS = socket(PF_INET, SOCK_STREAM, 0);
     if (dS == -1)
@@ -88,21 +88,21 @@ int detectClientCommands(char *msg, char* ip, int port, int fileSocketOrNot)
   }
 
   // redirection vers la commande de création de salon
-  if ((strcmp(msg, "/creer\n")) == 0 && (fileSocketOrNot == 0)){
+  if ((strcmp(msg, "/creer\n")) == 0){
     recognized = 1;
     if (values.idSalon == -1){
-      values.idSalon = creerSalon(socket);
+      values.idSalon = creerSalon(sock);
     }else {
       printf("\033[34mVous êtes déjà dans un channel\033[0m\n");
     }
   }
 
-  if ((strcmp(msg, "/quitter\n")) == 0 && (fileSocketOrNot == 0)){
+  if ((strcmp(msg, "/quitter\n")) == 0){
     recognized = 1;
     if (values.idSalon == -1){
       printf("\033[34mVous ne pouvez pas quittez le général\033[0m\n");
     }else {
-      quitterSalon(socket);
+      quitterSalon(sock);
       values.idSalon = -1;
       printf("\033[34mVous voilà dans le général!\033[0m\n");
     }
@@ -160,7 +160,7 @@ void *sendMsg(void *val)
       continue;
     } // size == 2 <=> msg = "\n\0"
 
-    if (detectClientCommands(msg, param->socket, param->filePort, 0) == 1) {
+    if (detectClientCommands(msg, param->ip, param->filePort, param->socket) == 1) {
       printf("\033[31mcommande reconnue\033[0m\n");
       free(msg);
       continue;

@@ -10,6 +10,9 @@
 #include "serveur.h"
 #include "commandes.h"
 
+#define MAX_NB_SALONS 10
+struct salon_struct salons[MAX_NB_SALONS];
+
 struct params
 {
   pthread_t threads[MAX_NB_CLIENTS];
@@ -100,14 +103,17 @@ void sendMsg(int position, char *msg)
   int idSalon = connection.socks[position]->idsalon;
   char *salon;
   char *nameSalon;
-  if (idSalon != -1){
-    nameSalon = malloc(sizeof(char) *(strlen(salons[idSalon].name)));
+  if (idSalon != -1)
+  {
+    nameSalon = malloc(sizeof(char) * (strlen(salons[idSalon].name)));
     strcpy(nameSalon, salons[idSalon].name);
-  }else{
-    nameSalon = malloc(sizeof(char) *(strlen("\033[1;31mGénéral\033[0m") + 1));
+  }
+  else
+  {
+    nameSalon = malloc(sizeof(char) * (strlen("\033[1;31mGénéral\033[0m") + 1));
     strcpy(nameSalon, "\033[1;31mGénéral\033[0m");
   }
-  salon = malloc(sizeof(char) *(strlen(nameSalon) + 2));
+  salon = malloc(sizeof(char) * (strlen(nameSalon) + 2));
   strcpy(salon, "[");
   strcat(salon, nameSalon);
   strcat(salon, "]");
@@ -117,6 +123,10 @@ void sendMsg(int position, char *msg)
   for (int i = 0; i < connection.nbClients; i++)
   {
     if (connection.socks[i] == NULL || (connection.socks[i]->idsalon != idSalon))
+    {
+      continue;
+    }
+    if (connection.socks[i]->idsalon != connection.socks[position]->idsalon)
     {
       continue;
     }
@@ -201,7 +211,7 @@ void *clientManagement(void *params)
     }
     if ((msg[0] == '/' || msg[0] == '@') && strcmp(msg, end) != 0)
     {
-      executer(connection.socks, connection.nbClients, msg, *position);
+      executer(connection.socks, connection.nbClients, msg, *position, salons, MAX_NB_SALONS);
     }
     else
     {
@@ -327,7 +337,9 @@ void *fileManagement(void *params)
       exit(1);
     }
     recvFile(fileParams.filesSocket[*pos], name);
-  } else if (strcmp(command, "@recv") == 0) {//reception de fichier
+  }
+  else if (strcmp(command, "@recv") == 0)
+  { // reception de fichier
     size_t size;
     ListeFichier(fileParams.filesSocket[*pos]);
 
@@ -412,7 +424,8 @@ void terminateEveryClient(int n)
 int main(int argc, char *argv[])
 {
 
-  if (argc != 3) {
+  if (argc != 3)
+  {
     printf("Nombre d'arguments érroné ! ./serveur [port1] [port2] \n");
     exit(1);
   }

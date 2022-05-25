@@ -198,7 +198,7 @@ void *ListeFichier(int socket)
   }
 }
 
-void* ListeSalon(int socket, int nbSalon){
+void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
   char* nameSalon;
   char* descSalon;
   for (int i = 0; i < nbSalon; i++){
@@ -255,20 +255,19 @@ void *sendFile(int socket, char *filename)
   fclose(file);
 }
 
-int creerSalon(char* name, char* desc, int socket){
+int creerSalon(char* name, char* desc, int socket, struct salon_struct* salons, int size){
   int i = 0;
-  while (i < MAX_NB_SALONS && salons[i].name != NULL)
+  while (i < size && (salons + i) != NULL)
   {
     i++;
   }
-  salons[i].admin = socket;
   salons[i].desc = desc;
   salons[i].name = name;
   salons[i].connected++;
   return i;
 }
 
-void* quitterSalon(struct userTuple* user){
+void* quitterSalon(struct userTuple* user, struct salon_struct* salons){
   salons[user->idsalon].connected--;
   user->idsalon = -1;
 }
@@ -281,7 +280,7 @@ void* quitterSalon(struct userTuple* user){
  * @param nbClient number of clients
  * @return void*
  */
-void *executer(struct userTuple **sockets, int nbClient, char *msg, int position)
+void *executer(struct userTuple **sockets, int nbClient, char *msg, int position, struct salon_struct* salons, int size)
 {
   // séparation et récupération de chaque élément de la commande
 
@@ -335,7 +334,7 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
 
   if (strcmp(listeMot[0], "@qsal") == 0){//quitter un salon
     recognized = 1;
-    quitterSalon(sockets[position]);
+    quitterSalon(sockets[position], salons);
   }
 
   if (strcmp(listeMot[0], "@csal") == 0) {//création d'un salon
@@ -367,7 +366,7 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     }//fin réception description salon
 
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
-    int idSalon = creerSalon(name,desc,sockets[position]->socket);
+    int idSalon = creerSalon(name,desc,sockets[position]->socket, salons, size);
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
     
