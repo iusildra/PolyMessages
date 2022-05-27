@@ -205,7 +205,7 @@ char *listServFiles(int socket)
 char* nameSalon(int socket){
   printf("\033[34mEntrez un nom pour votre salon (de taille 20 max)\033[0m\n");
   int salonMaxSize = 20;
-  char* msg = malloc(sizeof(char) * 20);
+  char* msg = malloc(sizeof(char) * salonMaxSize);
   do
   {
     fgets(msg, salonMaxSize, stdin);
@@ -227,8 +227,12 @@ char* nameSalon(int socket){
 
 char* descSalon(int socket){
   printf("\033[34mEntrez une description pour le salon (de taille 200 max)\033[0m\n");
-  char* msg = malloc(200);
-  scanf("%s",msg);
+  int salonDescMaxSize = 200;
+  char* msg = malloc(sizeof(char) * salonDescMaxSize);
+  do
+  {
+    fgets(msg, salonDescMaxSize, stdin);
+  } while (strlen(msg) == 1); // strlen(msg==1) <=> msg = "\n\0"
   size_t size = sizeof(char) * (strlen(msg));
   
   if (send(socket, &size, sizeof(size_t), 0) == -1)

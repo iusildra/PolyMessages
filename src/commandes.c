@@ -366,8 +366,15 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
       exit(1);
     }//fin réception description salon
 
+    char *nameSal = malloc(sizeof(char) * (sizeName - 1));
+    memcpy(nameSal, name, strlen(name) - 1);
+    free(name);
+    char *descSal = malloc(sizeof(char) * (sizeDesc - 1));
+    memcpy(descSal, desc, strlen(desc) - 1);
+    free(descSal);
+
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
-    int idSalon = creerSalon(name,desc,sockets[position]->socket, salons, size);
+    int idSalon = creerSalon(nameSal,descSal,sockets[position]->socket, salons, size);
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
     
