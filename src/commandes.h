@@ -72,4 +72,4 @@ void *executer(struct userTuple** sockets, int nbClient, char *msg, int position
  */
 void deco(int user);
 
-int creerSalon(char* name, char* desc, int socket, struct salon_struct* salons, int size);
+int creerSalon(char* name, char* desc, struct salon_struct* salons, int size);

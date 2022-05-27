@@ -209,9 +209,11 @@ void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
     nameSalon = salons[i].name;
     descSalon = salons[i].desc;
     char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 5);
+    strcpy(msg, "\033[34m");
     strcat(msg, nameSalon);
     strcat(msg, " - ");
     strcat(msg, descSalon);
+    strcat(msg, "\033[0m");
     strcat(msg, "\n");
     size_t msgSize = sizeof(char) * (strlen(msg) + 1);
     if (send(socket, &msgSize, sizeof(size_t), 0) == -1)
@@ -256,21 +258,37 @@ void *sendFile(int socket, char *filename)
   fclose(file);
 }
 
-int creerSalon(char* name, char* desc, int socket, struct salon_struct* salons, int size){
+int creerSalon(char* name, char* desc, struct salon_struct* salons, int size){
   int i = 0;
-  while (i < size && (salons + i) != NULL)
+  while (i < size && (salons[i].name) != NULL)
   {
     i++;
   }
   salons[i].desc = desc;
   salons[i].name = name;
   salons[i].connected++;
+  printf("desc salon = %s\n",salons[i].desc);
   return i;
 }
 
 void* quitterSalon(struct userTuple* user, struct salon_struct* salons){
   salons[user->idsalon].connected--;
   user->idsalon = -1;
+}
+
+int getNbSalons(int max,  struct salon_struct* salons)
+{
+  int i = 0;
+  int res = 0;
+  while (i < max)
+  {
+    if (salons[i].name != NULL){
+      res++;
+    }
+    i++;
+  }
+  printf("nb salons : %d\n",res);
+  return res;
 }
 
 /**
@@ -366,18 +384,26 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
       exit(1);
     }//fin réception description salon
 
+    printf("%s", desc);
+
     char *nameSal = malloc(sizeof(char) * (sizeName - 1));
     memcpy(nameSal, name, strlen(name) - 1);
     free(name);
+
     char *descSal = malloc(sizeof(char) * (sizeDesc - 1));
     memcpy(descSal, desc, strlen(desc) - 1);
-    free(descSal);
+    free(desc);
 
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
-    int idSalon = creerSalon(nameSal,descSal,sockets[position]->socket, salons, size);
+    int idSalon = creerSalon(nameSal,descSal, salons, size);
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
     
+  }
+
+  if (strcmp(listeMot[0], "/salons\n") == 0){
+    recognized = 1;
+    ListeSalon(sockets[position]->socket, getNbSalons(size,salons), salons);
   }
 
   if (strcmp(listeMot[0], "@send") == 0)
@@ -402,3 +428,4 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     }
   }
 }
+

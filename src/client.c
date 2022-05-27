@@ -150,7 +150,6 @@ void *sendMsg(void *val)
     } // size == 2 <=> msg = "\n\0"
 
     if (detectClientCommands(msg, param->ip, param->filePort, param->socket) == 1) {
-      printf("\033[31mcommande reconnue\033[0m\n");
       free(msg);
       continue;
     }
