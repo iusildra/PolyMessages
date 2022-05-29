@@ -307,15 +307,16 @@ void* connectClient(struct userTuple** sockets, int position, struct salon_struc
       perror("error send client");
       exit(1);
     }
+  } else {
+    answer = 0;
+    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+    sockets[position]->idsalon = n;
+    printf("Room has been changed for user %s, now is %s\n", sockets[position]->username, salons[sockets[position]->idsalon].name);
   }
-  answer = 0;
-  if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
-  {
-    perror("error send client");
-    exit(1);
-  }
-  sockets[position]->idsalon = n;
-  printf("Room has been changed for user %s, now is %s\n", sockets[position]->username, salons[sockets[position]->idsalon].name);
 }
 
 /**

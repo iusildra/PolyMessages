@@ -286,11 +286,15 @@ void* connectToRoom(int socket) {
     perror("error send client");
     exit(1);
   }
-  if (recv(socket, &n, sizeof(int), 0) == -1) {
+  printf("waiting for answer...\n");
+  if (recv(socket, &n, sizeof(int), 0) == -1)
+  {
     perror("error send client");
     exit(1);
   }
   if (n != 0) {
     printf("\033[34mThis room doesn't exists !\033[0m\n");
+  } else {
+    printf("\033[34mYou are now connected to the room !\033[0m\n");
   }
 }
