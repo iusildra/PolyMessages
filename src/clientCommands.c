@@ -209,7 +209,7 @@ char* nameSalon(int socket){
   {
     fgets(msg, salonMaxSize, stdin);
   } while (strlen(msg) == 1); // strlen(msg==1) <=> msg = "\n\0"
-  size_t size = sizeof(char) * (strlen(msg));
+  size_t size = sizeof(char) * (strlen(msg) + 1);
   
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
@@ -232,7 +232,7 @@ char* descSalon(int socket){
   {
     fgets(msg, salonDescMaxSize, stdin);
   } while (strlen(msg) == 1); // strlen(msg==1) <=> msg = "\n\0"
-  size_t size = sizeof(char) * (strlen(msg));
+  size_t size = sizeof(char) * (strlen(msg) + 1);
   
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {

@@ -384,7 +384,7 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
       exit(1);
     }//fin réception description salon
 
-    printf("%s", desc);
+    printf("Desc is : %s", desc);
 
     char *nameSal = malloc(sizeof(char) * (sizeName - 1));
     memcpy(nameSal, name, strlen(name) - 1);
