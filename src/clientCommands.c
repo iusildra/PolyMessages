@@ -15,7 +15,7 @@
 int sendFile(char *path, char *name, int socket)
 {
   // send signal for file managemnt
-  if (send(socket, "@send", sizeof(char) * 6, 0) == -1)
+  if (send(socket, "/send", sizeof(char) * 6, 0) == -1)
   {
     perror("error send client");
     exit(1);
@@ -248,7 +248,7 @@ char* descSalon(int socket){
 
 
 void* creerSalon(int socket){
-  char* msg = "@csal";
+  char* msg = "/creer";
   size_t size = sizeof(char) * (strlen(msg) + 1);
   if (send(socket, &size, sizeof(size_t), 0) == -1)
   {
@@ -265,4 +265,32 @@ void* creerSalon(int socket){
   char* desc = descSalon(socket);
 
   printf("\033[34mLe salon a été créé!\033[0m\n");
+}
+
+void* connectToRoom(int socket) {
+  int n;
+  printf("Choose your room : ");
+  scanf("%d", &n);
+  char *connect = "/connect";
+  size_t size = sizeof(char) * (strlen(connect) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, connect, size, 0) == -1) {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, &n, sizeof(int), 0) == -1) {
+    perror("error send client");
+    exit(1);
+  }
+  if (recv(socket, &n, sizeof(int), 0) == -1) {
+    perror("error send client");
+    exit(1);
+  }
+  if (n != 0) {
+    printf("\033[34mThis room doesn't exists !\033[0m\n");
+  }
 }

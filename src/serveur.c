@@ -327,7 +327,7 @@ void *fileManagement(void *params)
 
   printf("Command is %s\n", command);
 
-  if (strcmp(command, "@send") == 0)
+  if (strcmp(command, "/send") == 0)
   {
     size_t size;
     if (recv(fileParams.filesSocket[*pos], &size, sizeof(size_t), 0) == -1)

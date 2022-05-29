@@ -119,6 +119,11 @@ int detectClientCommands(char *msg, char* ip, int port, int sock)
       }
     listServFiles(dS);
   }
+
+  if (strcmp(msg, "/connect\n") == 0) {
+    recognized = 1;
+    connectToRoom(sock);
+  }
   if (recognized != 0)
     return 1;
   else

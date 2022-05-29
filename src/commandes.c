@@ -208,8 +208,9 @@ void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
   for (int i = 0; i < nbSalon; i++){
     nameSalon = salons[i].name;
     descSalon = salons[i].desc;
-    char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 5);
-    strcpy(msg, "\033[34m");
+    char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 7);
+    sprintf(msg, "\033[34m%d", i);
+    strcat(msg, " -> ");
     strcat(msg, nameSalon);
     strcat(msg, " - ");
     strcat(msg, descSalon);
@@ -291,6 +292,32 @@ int getNbSalons(int max,  struct salon_struct* salons)
   return res;
 }
 
+void* connectClient(struct userTuple** sockets, int position, struct salon_struct* salons, int size) {
+  int n = 0;
+  int answer = -1;
+  if (recv(sockets[position]->socket, &n, sizeof(int), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (n >= size || salons[n].name == NULL) {
+    answer = 1;
+    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+  }
+  answer = 0;
+  if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  sockets[position]->idsalon = n;
+  printf("Room has been changed for user %s, now is %s\n", sockets[position]->username, salons[sockets[position]->idsalon].name);
+}
+
 /**
  * @brief Launch command execution
  *
@@ -356,7 +383,7 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     quitterSalon(sockets[position], salons);
   }
 
-  if (strcmp(listeMot[0], "@csal") == 0) {//création d'un salon
+  if (strcmp(listeMot[0], "/creer") == 0) {//création d'un salon
     recognized = 1;
     size_t sizeName;//réception nom salon
     if (recv(sockets[position]->socket, &sizeName, sizeof(size_t), 0) == -1)
@@ -406,10 +433,15 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     ListeSalon(sockets[position]->socket, getNbSalons(size,salons), salons);
   }
 
-  if (strcmp(listeMot[0], "@send") == 0)
+  if (strcmp(listeMot[0], "/send") == 0)
   {
     recognized = 1;
     recvFile(sockets[position]->socket, listeMot[1]);
+  }
+
+  if(strcmp(listeMot[0], "/connect") == 0) {
+    recognized = 1;
+    connectClient(sockets, position, salons, size);
   }
 
   if (recognized == 0)

@@ -46,3 +46,5 @@ char* nameSalon(int socket);
 char* descSalon(int socket);
 
 void* creerSalon(int socket);
+
+void *connectToRoom(int socket);
