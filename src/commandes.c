@@ -249,7 +249,7 @@ void *sendFile(int socket, char *filename)
   int nb_val_lue;
   while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUFF, file)) != 0)
   {
-    if (send(socket, buffer, sizeof(short int)*TAILLE_BUFF, 0) == -1)
+    if (send(socket, buffer, sizeof(short int)*nb_val_lue, 0) == -1)
     {
       perror("error sendto client msg");
       exit(1);

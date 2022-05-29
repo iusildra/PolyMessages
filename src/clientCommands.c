@@ -34,7 +34,6 @@ int sendFile(char *path, char *name, int socket)
   }
     
   FILE *file;
-  FILE *file2;
   file = fopen(path, "rb");
   int TAILLE_BUF = 2000;
   short int buffer[TAILLE_BUF];
@@ -104,9 +103,9 @@ char *chooseFile(char **files, int max)
   int n = -1;
   do
   {
-    printf("\033[34mPlease enter a number from (1-%d) : \033[0m", max);
+    printf("\033[34mPlease enter a number (1-%d) : \033[0m", max);
     scanf("%d", &n);
-  } while (n <= 0 && n > max);
+  } while (n <= 0 || n > max);
   printf("\033[34m%s\033[0m\n", files[n-1]);
   return files[n - 1];
 }
@@ -193,11 +192,11 @@ char *listServFiles(int socket)
       break;
     }
     files[i] = m;
-    printf("\033[1;34m%d\t%s\033[0m", i, m);
+    printf("\033[1;34m%d\t%s\033[0m\n", i+1, m);
     i++;
   }
 
-  char *filename = chooseFile(files, i - 1);
+  char *filename = chooseFile(files, i);
   free(files);
   return filename;
 }

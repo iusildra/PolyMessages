@@ -105,13 +105,18 @@ void sendMsg(int position, char *msg)
   char *nameSalon;
   if (idSalon != -1)
   {
-    nameSalon = malloc(sizeof(char) * (strlen(salons[idSalon].name)));
-    strcpy(nameSalon, salons[idSalon].name);
+    char *firstColor = "\033[1;31m";
+    char *lastColor = "\033[0m";
+    nameSalon = malloc(sizeof(char) * (strlen(salons[idSalon].name) + strlen(firstColor) + strlen(lastColor) + 1));
+    strcpy(nameSalon, firstColor);
+    strcat(nameSalon, salons[idSalon].name);
+    strcat(nameSalon, lastColor);
   }
   else
   {
-    nameSalon = malloc(sizeof(char) * (strlen("\033[1;31mGénéral\033[0m") + 1));
-    strcpy(nameSalon, "\033[1;31mGénéral\033[0m");
+    char *salon = "\033[1;31mGénéral\033[0m";
+    nameSalon = malloc(sizeof(char) * (strlen(salon) + 1));
+    strcpy(nameSalon, salon);
   }
   salon = malloc(sizeof(char) * (strlen(nameSalon) + 2));
   strcpy(salon, "[");
