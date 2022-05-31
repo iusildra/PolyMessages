@@ -55,9 +55,11 @@ int messagePrive(struct userTuple **sockets, int nbClient, struct userTuple *use
   else
   {
     char *delimiter = " -> ";
-    size_t fullSize = sizeof(char) * (strlen(user->username) + strlen(delimiter) + strlen(msg) + 1);
+    char *start = "[\033[35mWhisper\033[0m]";
+    size_t fullSize = sizeof(char) * (strlen(user->username) + strlen(delimiter) + strlen(start) + strlen(msg) + 1);
     char *fullMsg = malloc(fullSize);
-    strcpy(fullMsg, user->username);
+    strcpy(fullMsg, start);
+    strcat(fullMsg, user->username);
     strcat(fullMsg, delimiter);
     strcat(fullMsg, msg);
     char *clients[2];
