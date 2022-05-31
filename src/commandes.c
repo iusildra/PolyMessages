@@ -210,10 +210,17 @@ void* ListeSalon(int socket, int nbSalon, struct salon_struct* salons){
     descSalon = salons[i].desc;
     char* msg = malloc(sizeof(char) * strlen(nameSalon) + strlen(descSalon) + 7);
     sprintf(msg, "\033[34m%d", i);
-    strcat(msg, " -> ");
+    strcat(msg, " -> \033[1;34m");
     strcat(msg, nameSalon);
     strcat(msg, " - ");
     strcat(msg, descSalon);
+    strcat(msg, "\033[34m [");
+
+    char* nb = malloc(2);
+    sprintf(nb, "%d", salons[i].connected);
+
+    strcat(msg, nb);
+    strcat(msg, "]");
     strcat(msg, "\033[0m");
     strcat(msg, "\n");
     size_t msgSize = sizeof(char) * (strlen(msg) + 1);
@@ -300,14 +307,14 @@ void* connectClient(struct userTuple** sockets, int position, struct salon_struc
     perror("error send client");
     exit(1);
   }
-  if (n >= size || salons[n].name == NULL) {
+  if (n >= size || salons[n].name == NULL) {//the room doesn't exist
     answer = 1;
     if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
     {
       perror("error send client");
       exit(1);
     }
-  } else {
+  } else {//the room has been found
     answer = 0;
     if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
     {
@@ -316,6 +323,36 @@ void* connectClient(struct userTuple** sockets, int position, struct salon_struc
     }
     sockets[position]->idsalon = n;
     printf("Room has been changed for user %s, now is %s\n", sockets[position]->username, salons[sockets[position]->idsalon].name);
+  }
+}
+
+void* deleteRoom(struct userTuple** sockets, int position, struct salon_struct* salons, int size) {
+  int n = 0;
+  int answer = -1;
+  if (recv(sockets[position]->socket, &n, sizeof(int), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (n >= size || salons[n].name == NULL) {//the room doesn't exist
+    answer = 1;
+    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+  } else {//the room has been found
+    answer = 0;
+    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
+    {
+      perror("error send client");
+      exit(1);
+    }
+    salons[sockets[position]->idsalon].name = NULL;
+    if (sockets[position]->idsalon == n){
+      sockets[position]->idsalon = -1;
+    }
+    printf("Room %s has been deleted\n", salons[sockets[position]->idsalon].name);
   }
 }
 
@@ -424,6 +461,9 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
 
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
     int idSalon = creerSalon(nameSal,descSal, salons, size);
+    if (sockets[position]->idsalon!=-1){//si l'utilisateur n'est pas dans le général
+      salons[sockets[position]->idsalon].connected--;
+    }
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
     
@@ -443,6 +483,11 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
   if(strcmp(listeMot[0], "/connect") == 0) {
     recognized = 1;
     connectClient(sockets, position, salons, size);
+  }
+
+  if(strcmp(listeMot[0], "/delete") == 0) {
+    recognized = 1;
+    deleteRoom(sockets, position, salons, size);
   }
 
   if (recognized == 0)

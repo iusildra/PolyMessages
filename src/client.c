@@ -124,6 +124,11 @@ int detectClientCommands(char *msg, char* ip, int port, int sock)
     recognized = 1;
     connectToRoom(sock);
   }
+
+  if (strcmp(msg, "/delete\n") == 0) {
+    recognized = 1;
+    deleteRoom(sock);
+  }
   if (recognized != 0)
     return 1;
   else

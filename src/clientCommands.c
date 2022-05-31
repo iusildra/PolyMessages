@@ -298,3 +298,35 @@ void* connectToRoom(int socket) {
     printf("\033[34mYou are now connected to the room !\033[0m\n");
   }
 }
+
+void* deleteRoom(int socket) {
+  int n;
+  printf("Choose your room : ");
+  scanf("%d", &n);
+  char *delete = "/delete";
+  size_t size = sizeof(char) * (strlen(delete) + 1);
+  if (send(socket, &size, sizeof(size_t), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, delete, size, 0) == -1) {
+    perror("error send client");
+    exit(1);
+  }
+  if (send(socket, &n, sizeof(int), 0) == -1) {
+    perror("error send client");
+    exit(1);
+  }
+  printf("waiting for answer...\n");
+  if (recv(socket, &n, sizeof(int), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (n != 0) {
+    printf("\033[34mThis room doesn't exists !\033[0m\n");
+  } else {
+    printf("\033[34mYou are now connected to the room !\033[0m\n");
+  }
+}
