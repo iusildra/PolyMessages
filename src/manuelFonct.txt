@@ -30,10 +30,20 @@ Utilisation de la commande : /rcvFile <nom du fichier>
 
 Création d'un salon de discussion :
 Ne prends pas de paramètre
-Demande à l'utilisateur de un nom et une drescription pour créer un channel
+Demande à l'utilisateur de un nom et une description pour créer un channel
 Utilisation de la commande : /creer
 
 Quitter un salon de discussion :
 Ne prends pas de paramètre
 Quitte un channel
 Utilisation de la commande : /quitter
+
+Connexion à un salon de discussion :
+Ne prends pas de paramètre
+Demande à l'utilisateur l'index du channel auquel il veut se connecter
+Utilisation de la commande : /connect
+
+Suppresion d' un salon de discussion :
+Ne prends pas de paramètre
+Demande à l'utilisateur l'index du channel qu'il veut supprimer
+Utilisation de la commande : /delete
