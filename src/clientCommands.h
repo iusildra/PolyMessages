@@ -48,5 +48,3 @@ char* descSalon(int socket);
 void* creerSalon(int socket);
 
 void *connectToRoom(int socket);
-
-void *deleteRoom(int socket);

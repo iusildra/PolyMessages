@@ -124,11 +124,6 @@ int detectClientCommands(char *msg, char* ip, int port, int sock)
     recognized = 1;
     connectToRoom(sock);
   }
-
-  if (strcmp(msg, "/delete\n") == 0) {
-    recognized = 1;
-    deleteRoom(sock);
-  }
   if (recognized != 0)
     return 1;
   else
@@ -247,7 +242,7 @@ void sendUsername(struct values *params)
   printf("%s\n", msg);
   free(msg);
 
-  printf("\033[34mEnter your username (length must be <= %d ): \033[0m", usernameMaxSize);
+  printf("\033[34mEnter your username (length must be <= %d: \033[0m", usernameMaxSize-2);
   msg = malloc(sizeof(char) * usernameMaxSize);
   do
   {
