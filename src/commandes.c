@@ -37,7 +37,7 @@ int messagePrive(struct userTuple **sockets, int nbClient, struct userTuple *use
   printf("Socket to send : %d", socket);
   if (socket == -1)
   {
-    char *msgAlert = "Cet utilisateur n'existe pas";
+    char *msgAlert = "Cet utilisateur n'existe pas\n";
     size_t fullSize = sizeof(char) * (strlen(msgAlert) + 1);
 
     if (send(user->socket, &fullSize, sizeof(size_t), 0) == -1)

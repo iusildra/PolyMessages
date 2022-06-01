@@ -1,6 +1,6 @@
 Fonctionnalité de message privé :
 Prends en paramètre l'utilisateur à qui envoyer le mp ainsi que le message à envoyer
-Envoie un message que seule la personne en paramètre et la personne qui a envoyé le message peut voir
+Envoie un message que seul la personne en paramètre et la personne qui a envoyé le message peuvent voir
 Utilisation de la commande : /mp <nom du destinataire> <message>
 
 Fonctionnalité de manuel :

@@ -1,6 +1,0 @@
-Voici le guide d'utilisation du service de messagerie PolyMessages :
-
-Pour compiler le fichier client : gcc -o <nom exécutable> client.c clientCommands.c -lpthread
-Pour exécuter le fichier client après compilation : ./<nom exécutable> <adresse ip> <port> <port>
-
-Une fois l'exécution du fichier effectuée, la connexion au serveur va être réalisée. Vous recevrez ensuite un message vous demandant d'entrer votre nom d'utilisateur en vous informant des conditions concernant le nom à écrire.
