@@ -1,44 +1,17 @@
-Fonctionnalité de message privé :
-Prends en paramètre l'utilisateur à qui envoyer le mp ainsi que le message à envoyer
-Envoie un message que seul la personne en paramètre et la personne qui a envoyé le message peuvent voir
-Utilisation de la commande : /mp <nom du destinataire> <message>
+Fonctionnalité de message privé : /mp <nom du destinataire> <message>
 
-Fonctionnalité de manuel :
-Ne prends pas de paramètres
-Lorsqu'un utilisateur se sert de cette fonction, liste les fonctionnalités disponibles, stockées dans un fichier texte
-Utilisation de la commande : /help
+Fonctionnalité de manuel : /help
 
-Fonctionnalité de déconnexion :
-Ne prends pas de paramètre
-Lorsqu'un utilisateur utilise cette fonction, le serveur enlève le client de la liste, ferme la connexion et met fin au thread de cet utilisateur
-Utilisation de la commande : /DC
+Fonctionnalité de déconnexion : /DC
 
-Fonctionnalité d'affichage des fichiers présents sur le serveur : 
-Ne prends pas de paramètre
-Lorsqu'un utilisateur se sert de cette fonction, elle lui envoie la liste des fichiers présents sur le serveur
-Utilisation de la commande : /Files
+Fonctionnalité de transfert de fichier présent vers le serveur : /send
 
-Fonctionnalité de récupération de fichier présent sur le serveur :
-Prends en paramètre le nom du fichier que l'utilisateur souhaite récupérer sur le serveur
-Lorsqu'un utilisateur appelle cette fonction, elle lui envoie le fichier qu'il veut récupérer sur le serveur
-Utilisation de la commande : /rcvFile <nom du fichier>
+Fonctionnalité de récupération de fichier présent sur le serveur : /recv
 
-Fonctionnalité d'affichage des salons présents sur le serveur :
-Ne prends pas de paramètre
-Lorsqu'un utilisateur se sert de cette fonction, elle lui envoie la liste des salons présents sur le serveur ainsi que leur description
-Utilisation de la commande : /salon
+Création d'un salon de discussion : /creer
 
-Création d'un salon de discussion :
-Ne prends pas de paramètre
-Demande à l'utilisateur de un nom et une drescription pour créer un channel
-Utilisation de la commande : /creer
+Quitter un salon de discussion : /quitter
 
-Quitter un salon de discussion :
-Ne prends pas de paramètre
-Quitte un channel
-Utilisation de la commande : /quitter
+Supprimer un salon : /delete
 
-Connexion à un salon de discussion :
-Ne prends pas de paramètre
-Demande à l'utilisateur le numéro du salon auquel il veut se connecter, puis l'y connecte
-Utilisation de la commande : /connect
+Connexion à un salon de discussion. Demande un identifiant de salon : /connect

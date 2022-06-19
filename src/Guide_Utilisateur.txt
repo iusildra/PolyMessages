@@ -1,0 +1,52 @@
+PolyMessages : Le guide client
+
+Voici le guide d'utilisation du service de messagerie PolyMessages :
+
+Pour compiler le fichier client : gcc -o <nom exécutable> client.c clientCommands.c -lpthread
+Pour exécuter le fichier client après compilation : ./<nom exécutable> <adresse ip> <port> <port>
+
+Une fois l'exécution du fichier effectuée, la connexion au serveur va être réalisée. Vous recevrez ensuite un message vous demandant d'entrer votre nom d'utilisateur en vous informant des conditions concernant le nom à écrire. Une fois votre nom d'utilisateur entré, vous serez automatiquement connecté au salon textuel général du serveur, vous pourrez ainsi discuter autant que vous voulez avec les autres utilisateurs connectés au même salon que vous. 
+
+Vous avez un large choix de commandes à votre disposition : 
+
+Les commandes générales :
+
+La fonctionnalité de message privé, qui vous permet d'envoyer un message à une personne en particulier connectée au serveur, seule cette personne recevra le message que vous aurez envoyé. 
+Pour exécuter la commande, utilisez cette syntaxe : /mp <nom du destinataire> <message>
+
+La commande de manuel qui permet d'afficher : la liste des commandes disponibles et leur description, les paramètres nécessaires à entrer pour chacune d'elles ainsi qu'un rappel de la syntaxe à employer pour les exécuter.
+Pour exécuter la commande, utilisez cette syntaxe : /help
+
+La commande de déconnexion qui permet de quitter le serveur.
+Pour exécuter la commande, utilisez cette syntaxe : /DC
+
+
+Le serveur permet le stockage et la récupération de fichiers par tous les utilisateurs, les fichiers peuvent être de tous types : des fichiers textes, des images ou encore des pdf. Les fichiers auxquels vous seuls avez accès se trouvent dans le dossier “files” du serveur. Encore une fois, il y a quelques commandes à connaître concernant l'utilisation de cette fonctionnalité proposée sur le serveur.
+
+Les commandes concernants les fichiers :
+
+La commande permettant l'envoi de fichiers sur le serveur. Vous devez préalablement déposer dans le dossier “files” les fichiers que vous voulez envoyer sur le serveur. Vous n'aurez ensuite qu'à utiliser la commande, qui vous demandera ensuite de choisir quel fichier vous voulez envoyer parmi ceux présents dans le dossier.
+Pour exécuter la commande, utilisez cette syntaxe : /send
+
+La commande permettant l'affichage et la réception des fichiers. Les fichiers présents dans le serveur sont regroupés dans un dossier commun, cette commande permet d'afficher la liste des fichiers présents dans ce dossier commun puis vous demande de choisir le fichier que vous voulez récupérer parmi la liste des fichiers disponibles. Ce fichier est ensuite copié dans le dossier “files” pour que vous puissiez y avoir accès pour le consulter ou le télécharger.
+Pour exécuter la commande, utilisez cette syntaxe : /recv
+
+
+
+
+Le serveur permet aussi de discuter dans des salons de discussion variés. Lorsque vous êtes dans un salon de discussion, vous ne pouvez parler que dans ce salon et recevoir des messages seulement de la part de personnes présentes dans ce salon (mis à part les messages privés qui peuvent être reçus et envoyés peu importe le salon où vous vous trouvez). Il y a également quelques commandes liées aux salons qu'il vous sera utile de connaître.
+
+Les commandes concernants les salons :
+
+La commande de création de salon, cette commande permet de créer un nouveau salon de discussion. Vous pouvez l'utiliser peu importe le salon dans lequel vous vous trouvez actuellement. Après exécution de la commande, elle vous demandera de choisir un nom ainsi qu'une description pour le salon que vous allez créer. Une fois le salon créé, vous serez directement connecté au salon en question et vous pourrez commencer à discuter avec les personnes qui le rejoindront.
+Pour exécuter la commande, utilisez cette syntaxe : /creer
+
+La commande de suppression de salon, cette commande permet de supprimer un salon de discussion existant. Vous pouvez l'utiliser peu importe le salon dans lequel vous vous trouvez actuellement, et peu importe si des utilisateurs sont connectés dans le salon en question lorsque vous utilisez la commande. Après exécution de la commande, elle vous demandera de choisir le salon à supprimer puis, supprimera le salon et déplacera les utilisateurs qui pourraient y être connectés dans le général.
+Pour exécuter la commande, utilisez cette syntaxe : /delete 
+
+La commande de connexion à un salon, cette commande permet de se connecter à un salon de discussion. Vous pouvez l'utiliser peu importe le salon dans lequel vous vous trouvez actuellement. Après exécution de la commande, elle vous demandera de choisir le salon dans lequel vous voulez vous connecter puis, si le salon existe, vous connectera dans le salon en question pour que vous puissiez parler avec les autres utilisateurs qui y sont présents.
+Pour exécuter la commande, utilisez cette syntaxe : /connect
+
+La commande pour quitter un salon, cette commande permet de quitter n'importe quel salon pour retourner sur le général, si vous utilisez cette commande depuis le général, vous resterez dans le général.
+Pour exécuter la commande, utilisez cette syntaxe : /quitter
+

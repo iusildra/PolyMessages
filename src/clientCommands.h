@@ -41,10 +41,38 @@ char *listFiles();
  */
 char* listServFiles(int socket);
 
-char* nameSalon(int socket);
+/**
+ * @brief Ask the client the name of the channel and send it to the server
+ * 
+ * @param socket socket to the file server
+ */
+void nameSalon(int socket);
 
-char* descSalon(int socket);
+/**
+ * @brief  Ask the client the description of the channel and send it to the server
+ * 
+ * @param socket socket to the file server
+ * @return char* the path of the file to send
+ */
+void descSalon(int socket);
 
+/**
+ * @brief Send a signal to the server to create a channel
+ * 
+ * @param socket socket to the file server
+ */
 void* creerSalon(int socket);
 
+/**
+ * @brief Send a signal to the server to connect a client to a channel
+ * 
+ * @param socket socket to the file server
+ */
 void *connectToRoom(int socket);
+
+/**
+ * @brief Send a signal to the server to delete a channel
+ * 
+ * @param socket socket to the file server
+ */
+void *deleteRoom(int socket);

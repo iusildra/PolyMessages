@@ -343,7 +343,7 @@ void *fileManagement(void *params)
     }
     recvFile(fileParams.filesSocket[*pos], name);
   }
-  else if (strcmp(command, "@recv") == 0)
+  else if (strcmp(command, "/recv") == 0)
   { // reception de fichier
     size_t size;
     ListeFichier(fileParams.filesSocket[*pos]);
@@ -416,6 +416,7 @@ void terminateEveryClient(int n)
       i++;
     }
   }
+  saveRooms(salons);
   exit(0);
 }
 
@@ -478,7 +479,7 @@ int main(int argc, char *argv[])
 
   int pid = fork();
 
-  if (pid == 0)
+  if (pid != 0)
   {
     signal(SIGINT, terminateEveryClient);
     userLogin(&nbPlaces);

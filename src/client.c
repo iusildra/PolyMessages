@@ -14,7 +14,7 @@ int NB_THREADS = 2;
 /**
  * @brief Detect if the user entered a client side command
  *
- * @param msg the messag writtent
+ * @param msg the messag written
  * @return int 0 if there was no commands, 1 otherwise
  */
 int detectClientCommands(char *msg, char* ip, int port, int sock)
@@ -124,18 +124,16 @@ int detectClientCommands(char *msg, char* ip, int port, int sock)
     recognized = 1;
     connectToRoom(sock);
   }
+  if (strcmp(msg, "/delete\n") == 0) {
+    recognized = 1;
+    deleteRoom(sock);
+  }
   if (recognized != 0)
     return 1;
   else
     return 0;
 }
 
-/**
- * @brief Allows a client to send a message
- *
- * @param val informations about the socket
- * @return void*
- */
 void *sendMsg(void *val)
 {
   // 0 : int dS, 1 : struct sockaddr_in aS, 2 : socklen_t lgA
@@ -183,12 +181,6 @@ void *sendMsg(void *val)
   } while (1);
 }
 
-/**
- * @brief Allows a client to receive a message
- *
- * @param params informations about the socket
- * @return void*
- */
 void *receiveMsg(void *params)
 {
   char *end = "/DC";
@@ -220,12 +212,6 @@ void *receiveMsg(void *params)
   pthread_exit(0);
 }
 
-/**
- * @brief Allows a client to send it's username on login
- *
- * @param params informations about the socket
- * @return void*
- */
 void sendUsername(struct values *params)
 {
   int usernameMaxSize = 12;
@@ -287,11 +273,11 @@ void terminateClient(int sig)
 }
 
 /**
- * @brief Main function of the client
- *
- * @param argc
- * @param argv
- * @return int
+ * @brief Main function
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
  */
 int main(int argc, char *argv[])
 {

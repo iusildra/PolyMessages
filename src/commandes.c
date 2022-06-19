@@ -9,6 +9,7 @@
 #include <dirent.h>
 #include "commandes.h"
 #define PATH "../serverFiles/"
+#define ROOM_BACKUP "../serverFiles/roomsBackup.txt"
 
 /**
  * @brief Private message, only the sender and the given receiver will see it /mp <nom du destinataire> <message>
@@ -50,9 +51,7 @@ int messagePrive(struct userTuple **sockets, int nbClient, struct userTuple *use
       perror("error send server msg");
       exit(1);
     }
-  }
-
-  else
+  } else
   {
     char *delimiter = " -> ";
     size_t fullSize = sizeof(char) * (strlen(user->username) + strlen(delimiter) + strlen(msg) + 1);
@@ -179,8 +178,10 @@ void *ListeFichier(int socket)
         perror("error sendto server msg");
         exit(1);
       }
+      printf("File %s\n", msg);
+      free(msg);
     }
-    char *end = "@end";
+    char *end = "/end";
     size_t size = sizeof(char) * (strlen(end) + 1);
     if (send(socket, &size, sizeof(size_t), 0) == -1)
     {
@@ -244,7 +245,6 @@ void *sendFile(int socket, char *filename)
   char *filepath = malloc(sizeof(char) * (strlen(PATH) + strlen(filename) + 1));
   strcpy(filepath, PATH);
   strcat(filepath, filename);
-  printf("%s\n", filepath);
   file = fopen(filepath, "rb");
   int nb_val_lue;
   while ((nb_val_lue = fread(buffer, sizeof(short int), TAILLE_BUFF, file)) != 0)
@@ -267,7 +267,6 @@ int creerSalon(char* name, char* desc, struct salon_struct* salons, int size){
   salons[i].desc = desc;
   salons[i].name = name;
   salons[i].connected++;
-  printf("desc salon = %s\n",salons[i].desc);
   return i;
 }
 
@@ -287,7 +286,6 @@ int getNbSalons(int max,  struct salon_struct* salons)
     }
     i++;
   }
-  printf("nb salons : %d\n",res);
   return res;
 }
 
@@ -299,22 +297,26 @@ void* connectClient(struct userTuple** sockets, int position, struct salon_struc
     perror("error send client");
     exit(1);
   }
-  if (n >= size || salons[n].name == NULL) {
-    answer = 1;
-    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
-    {
-      perror("error send client");
-      exit(1);
-    }
-  } else {
-    answer = 0;
-    if (send(sockets[position]->socket, &answer, sizeof(int), 0) == -1)
-    {
-      perror("error send client");
-      exit(1);
-    }
+  if (n < size & salons[n].name != NULL) {
     sockets[position]->idsalon = n;
     printf("Room has been changed for user %s, now is %s\n", sockets[position]->username, salons[sockets[position]->idsalon].name);
+  }
+}
+
+void* deleteRoom(struct userTuple** sockets, int position, struct salon_struct* salons, int size) {
+  int n = 0;
+  int answer = -1;
+  if (recv(sockets[position]->socket, &n, sizeof(int), 0) == -1)
+  {
+    perror("error send client");
+    exit(1);
+  }
+  if (n < size && salons[n].name != NULL) {//the room doesn't exist
+    salons[sockets[position]->idsalon].name = NULL;
+    if (sockets[position]->idsalon == n){
+      sockets[position]->idsalon = -1;
+    }
+    printf("Room %s has been deleted\n", salons[sockets[position]->idsalon].name);
   }
 }
 
@@ -371,13 +373,6 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     recvFile(sockets[position]->socket, listeMot[1]);
   }
 
-  // redirection vers la commande listant les fichiers présents sur le serveur
-  if (strcmp(listeMot[0], "/Files\n") == 0)
-  {
-    recognized = 1;
-    ListeFichier(sockets[position]->socket);
-  }
-
   if (strcmp(listeMot[0], "/quitter\n") == 0){//quitter un salon
     recognized = 1;
     quitterSalon(sockets[position], salons);
@@ -413,16 +408,8 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
 
     printf("Desc is : %s", desc);
 
-    char *nameSal = malloc(sizeof(char) * (sizeName - 1));
-    memcpy(nameSal, name, strlen(name) - 1);
-    free(name);
-
-    char *descSal = malloc(sizeof(char) * (sizeDesc - 1));
-    memcpy(descSal, desc, strlen(desc) - 1);
-    free(desc);
-
     //envoi id du salon, le créateur du salon rentre dans le salon à la création
-    int idSalon = creerSalon(nameSal,descSal, salons, size);
+    int idSalon = creerSalon(name,desc, salons, size);
     sockets[position]->idsalon=idSalon;
     printf("Création salon d'id = %d\n", idSalon);
     
@@ -444,6 +431,11 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
     connectClient(sockets, position, salons, size);
   }
 
+  if(strcmp(listeMot[0], "/delete") == 0) {
+    recognized = 1;
+    deleteRoom(sockets, position, salons, size);
+  }
+
   if (recognized == 0)
   {
     char *nopMsg = "This command is not recognized\n";
@@ -461,3 +453,18 @@ void *executer(struct userTuple **sockets, int nbClient, char *msg, int position
   }
 }
 
+void* saveRooms(struct salon_struct* salons) {
+  FILE* file;
+  file = fopen(ROOM_BACKUP, "w");
+  for(int i = 0; i < 10; i++) {
+    if (salons[i].name == NULL) continue;
+    printf("Ecriture du salon %s en cours...\n", salons[i].name);
+    fprintf(file, "%s/%s\n", salons[i].name, salons[i].desc);
+    printf("Ecriture du salon %s temrinée\n", salons[i].name);
+  }
+  fclose(file);
+}
+
+struct salon_struct* loadRooms() {
+  FILE *file;
+}

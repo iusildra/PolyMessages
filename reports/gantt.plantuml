@@ -57,27 +57,27 @@ ganttDiagram {
 }
 </style>
 
-Project starts 2022-04-18
-' ' SPRINT I
-' -- SPRINT I --
-' [Init] as [I] starts 2022-04-11
-' [Parallelisation client] as [PC] starts 2022-04-12
-' [Parallelisation serveur] as [PS] starts 2022-04-12
-' [Fusion] as [F] starts 2022-04-12
+Project starts 2022-04-11
+' SPRINT I
+-- SPRINT I (Dual client) --
+[Init] as [I] starts 2022-04-11
+[Parallelisation client] as [PC] starts 2022-04-12
+[Parallelisation serveur] as [PS] starts 2022-04-12
+[Fusion] as [F] starts 2022-04-12
 
-' [I] on {Lucas:100%} lasts 1 day
-' [F] on {Lucas:100%} lasts 1 day
-' [PS] on {Marvin:100%} lasts 3 days
-' [PC] on {Éri:100%} lasts 3 days
+[I] on {Lucas:100%} lasts 1 day
+[F] on {Lucas:100%} lasts 1 day
+[PS] on {Marvin:100%} lasts 3 days
+[PC] on {Éri:100%} lasts 3 days
 
-' [I] -> [PC]
-' [I] -> [PS]
-' [PC] -> [F]
-' [PS] -> [F]
+[I] -> [PC]
+[I] -> [PS]
+[PC] -> [F]
+[PS] -> [F]
 
 
 ' SPRINT II
--- SPRINT II --
+-- SPRINT II (Multi-cliant handling) --
 [Gestion multi-client] as [MCH] starts 2022-04-19 and lasts 4 days
 [Message Privé] as [MP] starts 2022-04-20 and lasts 4 days
 [Manuel] as [Help] starts 2022-04-25 and lasts 3 days
@@ -87,29 +87,89 @@ Project starts 2022-04-18
 [CR] on {Lucas:100%} lasts 4 days
 [MCH] on {Lucas:100%} lasts 4 days
 [MP] on {Marvin:100%} lasts 4 days
-' [Help] on {Marvin:100%} lasts 2 days
+[Help] on {Marvin:100%} lasts 2 days
 [Help] on {Éri:100%} lasts 3 days
 [Intégrité] on {Éri:100%} starts 2022-04-25 and lasts 2 days
 
-' [F] -> [MCH]
-' [F] -> [MP]
+[F] -> [MCH]
+[F] -> [MP]
 [MCH] -> [CR]
 [MCH] -> [Int]
 [MP] -> [Help]
 [Int] -> [Help]
 
+@enduml
+@startuml gantt2
+language fr
+printscale daily zoom 2
+' hide footbox
+' hide ressources footbox
 
--- SPRINT III --
-[Listage fichiers] as [LF] starts 2022-05-09 and lasts 1 days
-[Send file Cli->Serv] as [SF-CS] starts 2022-05-09 and lasts 2 days
-[Recv file Cli->Serv] as [RF-CS] starts 2022-05-09 and lasts 2 days
-[CR] -> [LF]
-[CR] -> [SF-CS]
-[CR] -> [RF-CS]
-[Send file Serv->Cli] as [SF-SC] starts 2022-05-13 and lasts 2 days
-[Recv file Serv->Cli] as [RF-SC] starts 2022-05-13 and lasts 2 days
+<style>
+ganttDiagram {
+	task {
+		FontName Helvetica
+		' FontColor red
+		FontSize 12
+		' FontStyle bold
+		' BackGroundColor GreenYellow
+		LineColor blue
+	}
+	milestone {
+		FontColor blue
+		FontSize 25
+		FontStyle italic
+		BackGroundColor yellow
+		LineColor red
+	}
+	note {
+		FontColor DarkGreen
+		FontSize 10
+		LineColor OrangeRed
+	}
+	arrow {
+		FontName Helvetica
+		FontColor red
+		FontSize 18
+		FontStyle bold
+		BackGroundColor GreenYellow
+		LineColor blue
+		LineStyle 8.0;13.0
+		LineThickness 3.0
+	}
+	separator {
+		BackgroundColor lightGreen
+		LineStyle 8.0;3.0
+		LineColor red
+		LineThickness 1.0
+		FontSize 16
+		FontStyle bold
+		FontColor purple
+		Margin 5
+		Padding 5
+	}
+	timeline {
+	    BackgroundColor Bisque
+	}
+	closed {
+		BackgroundColor pink
+		FontColor red
+	}
+}
+</style>
+
+Project starts 2022-05-09
+
+
+-- SPRINT III (File management) --
+[Listage fichiers] as [LF] starts 2022-05-09
+[Send file Cli->Serv] as [SF-CS] starts 2022-05-09
+[Recv file Cli->Serv] as [RF-CS] starts 2022-05-09
+[Send file Serv->Cli] as [SF-SC] starts 2022-05-13
+[Recv file Serv->Cli] as [RF-SC] starts 2022-05-13
 [SF-CS] -> [SF-SC]
 [RF-CS] -> [RF-SC]
+
 
 [LF] on {Lucas:75%} lasts 1 day
 [SF-CS] on {Éri:75%} lasts 2 day
@@ -118,5 +178,22 @@ Project starts 2022-04-18
 [SF-SC] on {Éri:100%} lasts 2 day
 [RF-SC] on {Marvin:100%} lasts 2 day
 
-
+-- SPRINT IV (Rooms) --
+[Patch send/recv file] as [PSRF] starts 2022-05-17
+[Creation] as [RCr] starts 2022-05-17
+[Deletion] as [RD] starts 2022-05-17
+[Connection] as [RC] starts 2022-05-30
+[Deconnection] as [RDc] starts 2022-05-23
+[Manual writing] as [WR] starts 2022-05-30
+[SF-SC] -> [PSRF]
+[RF-SC] -> [PSRF]
+[RD] -> [RDc]
+[PSRF] -> [RC]
+[PSRF] on {Lucas:100%} lasts 6 days
+[RC] on {Lucas:100%} lasts 3 days
+[RCr] on {Marvin:75%} lasts 3 days
+[RCr] on {Eri:25%} lasts 3 days
+[RD] on {Eri:75%} lasts 3 days
+[RDc] on {Eri:100%} lasts 1 day
+[WR] on {Marvin:100%} lasts 1 day
 @enduml

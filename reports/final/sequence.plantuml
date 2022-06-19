@@ -42,7 +42,18 @@ Client --> Bob: receive message's size
 Client --> Bob--: receive message
 end
 deactivate Server
+===Server shutdown==
+autonumber "<b>[00]"
+Server --> Client: send disconnection\nsignal
+activate Server
+activate Client
+Client --> Bob: display disconnection
+destroy Client
+Server -> Server: save rooms\nin a file
+Server -[hidden]-> Client
+destroy Server
 @enduml
+
 @startuml commands
 skinparam responseMessageBelowArrow true
 
@@ -79,6 +90,57 @@ Server -> Server: catch\nrequest
 Server --> Client: deconnect client
 Client --> Bob--: confirm deconnection
 destroy Client
+deactivate Server
+@enduml
+
+@startuml rooms
+actor Bob
+participant "Bob's client" as Client
+participant "Server" as Server
+==/creer==
+Bob -> Client++: write "/creer"
+activate Server
+Client --> Bob: ask for room name
+Bob -> Client: enter name
+Client --> Bob: ask for room description
+Bob -> Client: enter description
+Client -> Server: send information
+Server -> Server: add the client\nto the newly\ncreated room
+Client -[hidden]-> Bob
+deactivate Client
+deactivate Server
+==/quitter==
+Bob -> Client++: write "/quitter"
+activate Server
+Client -> Server: transmit
+Server -> Server: remove Bob\nfrom the room
+Client -[hidden]-> Bob--
+deactivate Server
+==/connect==
+Bob -> Client++: write "/connect"
+activate Server
+Client -> Bob: ask for the id of the room
+Bob -> Client: choose
+Client -> Server: ask for change
+alt room exists
+Server -> Server: connect bob to\nthe requested room
+else
+Server --> Client: return an error
+Client --> Bob--: display the error
+end
+deactivate Server
+==/delete==
+Bob -> Client++: write "/delete"
+activate Server
+Client -> Bob: ask for the id of the room
+Bob -> Client: choose
+Client -> Server: ask for deletion
+alt room exists
+Server -> Server: delete the room
+else
+Server --> Client: return an error
+Client --> Bob--: display the error
+end
 deactivate Server
 @enduml
 
